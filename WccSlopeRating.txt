@@ -1,0 +1,9 @@
+whiteRating" = 70.6
+whiteSlope"  = 128
+whitePar"    = 72
+goldRating"  = 66.8
+goldSlope "  = 121
+goldPar"     = 72
+redRating"   = 71.3
+redSlope"    = 119
+redPar"      = 72
