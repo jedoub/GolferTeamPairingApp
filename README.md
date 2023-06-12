@@ -1,12 +1,16 @@
 # GolferTeamPairingApp
-Using a list of golfers &amp; their Indexes teams are selected by ABCD or Random using the Course HCP
-The list of players and their indexes is imported from the GHIN database.
-They are added to a listBox for easy selection to bild a list of players for a given day.
+Using a list of golfers & their Hcp Indexes, teams are selected by ABCD ranking using the Course HCP or Randomly.
+The list of players and their indexes is a text file exported from the GHIN database.
+As players are selected they are added to another listBox to build a list of players for a given day.
 Using the Course details (Slope, Rating, Par) for a given set of tees their course HCP is calulated.
-The players are sorted based on their HCP and the teams are made to have similar total team HCPs.
-Another pass is made in an effort to balance the teams to have an equal number of WHT TEE and GOLD TEE players.
-Additionally, If there are an odd number of players the master is offered to play blind TWOsomes.
-This opens a form that displays random pairing kicking the low point scorer (STABBLEFORD) out.
+The players are sorted based on their HCP.
+The teams are built after sorting to have similar total team HCPs.
+Another pass is made in an effort to balance the teams to have an equal number of WHITE TEE and GOLD TEE players.
+The APP support up to 28 players, 7 teams of 4.
+If there are an odd number of players the APP offers the group leader to play as threesomes or include a blind draw or to play blind Twosomes.
+These options are based on the number of players on a given day.
+If two-man teams is selected and there is an odd number of golfers a new form is displayed. 
+This form shows the random pairings, with an option to kick out the low point scorer (STABLEFORD) and re-pair his partner with the odd man.
 The high point getter along with the winning teams are highlighted (Front, Back, Total).
-Another special form for WOLF is opened. If there are 5 players this form has the calculation for individual points.
-These points are used to in-turn calculate the cash payouts.
+Another special form for WOLF is opened. If there are just 5 players.
+This form has the calculations of individual point differentials used to in-turn calculate the cash payouts.
