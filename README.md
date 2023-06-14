@@ -13,5 +13,5 @@ Make teams of 3 or include a blind draw in four-man teams or for smaller groups 
 If two-man teams is selected a new form is displayed. 
 This form shows the random pairings, with an option to kick out the low point scorer (STABLEFORD) and re-pair his partner with the odd man.
 The winning teams are highlighted (Front, Back, Total), as well as the highpoint player.
-If there are just 5 players, another special form for WOLF game is opened. 
-This form has the calculations of individual point differentials used to in-turn calculate the cash payouts.
+If there are just 5 players, another special form for WOLF (an individual game for 5) is opened. 
+This form has the calculations of the players point differentials used to in-turn to calculate the cash payouts.
