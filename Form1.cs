@@ -20,11 +20,9 @@ namespace BlueTeeApp
         static public bool hideLowManOutBtn = false;
         static public int avgPlayerHcp = 0;
 
-        static Single hcpIndx = 0, teeHCP = 0;
+        static Single teeHCP = 0;
             
-        static string hcpIndex = "", roundedHcp = "";
-
-        private static List<string> golferCourseHcp = new List<string>();
+        static string hcpIndex = "";
 
         static Hashtable NamePlusCourseHcp = new Hashtable();
 
@@ -44,10 +42,20 @@ namespace BlueTeeApp
 
         string whiteplayerToReplace = null;
 
-        private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72;
+        private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
 
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Created to assist the group leader build teams on a given day." +
+                "\nTeams can be random or sorted based on each golfer's course hcp." +
+                "\nTeams are also balanced based on different tees used per team." +
+                "\nRandom blinds are used if there are an odd number of players and 3-man teams aren't an option." +
+                "\nFor smaller groups random 2-man teams is also a possibility." +
+                "\nFinally, scoring for an individual game with 5 golfers is provided." +
+                "\nAuthor, johnedoub@gmail.com. Weeks of work led to this.", "APP Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
-        static readonly string SWver = "SWver: 1_6_12";
+        static readonly string SWver = "SWver: 1_6_14";
         public Form1()
         {
             InitializeComponent();
@@ -78,8 +86,9 @@ namespace BlueTeeApp
                         textline = sr.ReadLine();
                         textline = textline.ToUpper();
 
-                        if (textline.Length > 0 && !(textline.Contains("VICKI") || textline.Contains("SUE") || textline.Contains("MAXINE") || textline.Contains("DEB") || textline.Contains("CAROL") || textline.Contains("LINDA")))
+                        if (textline.Length > 0)
                         {
+                            // Shorten some common names
                             if (textline.Contains("PATRICK"))
                                 textline = textline.Replace("PATRICK", "PAT");
                             else if (textline.Contains("WILLIAM"))
@@ -92,14 +101,13 @@ namespace BlueTeeApp
 
                             // Strip off the handicap Index number
                             hcpIndex = textline.Substring(endpt + 1, textline.Length - (endpt + 1));
-                            golferCourseHcp.Add(roundedHcp);
 
                             // Strip off the Players Name
                             golferName = textline.Substring(0, endpt);
 
                             // Separate the First and Last name
                             string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-
+                            // Look for middle initials and SR designation
                             if (names.Length == 3)
                             {
                                 if (names[1].Length == 1 || names[1].Contains(".") || names[1].Contains("SR"))
@@ -116,25 +124,22 @@ namespace BlueTeeApp
                         }
                     } while (sr.Peek() != -1);
                 }
-
+                // MAke 3 dummy players to allow for guests
                 golferName = "Guest Player";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(12);
-                golferCourseHcp.Add("12");
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
 
                 golferName = "Guest Player Jr";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(15);
-                golferCourseHcp.Add("15");
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
 
                 golferName = "Guest Player Sr";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(10);
-                golferCourseHcp.Add("10");
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
             }
@@ -144,7 +149,7 @@ namespace BlueTeeApp
                 MessageBox.Show("Error: " + dbcFilePath + " FILE NOT FOUND\n" + "\nYou must Associate a WccGolfers.txt file.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 MainWin_FormClosing(null, null);
             }
-            // READ the DBCconfig File
+            // READ the Course Rating/Slope/Par File
             if (File.Exists(hcpFilePath))
             {
                 // Read the file into memory
@@ -154,9 +159,10 @@ namespace BlueTeeApp
                     do
                     {
                         textline = sr.ReadLine();
-                        // the endpt is the tab character
+                        // the endpt is the '=' character
                         int endpt = textline.IndexOf("=");
-                        // Strip off the course handicap Rating number
+
+                        // Strip off the course handicap Rating/Slope/Par value for 4 sets of tees Wht,Gld,Red,Grn
                         if (textline.Contains("whiteRating"))                        
                             whtRating = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
                         else if (textline.Contains("whiteSlope"))
@@ -175,12 +181,18 @@ namespace BlueTeeApp
                             goldPar = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
                         else if (textline.Contains("redPar"))
                             redPar = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
+                        else if (textline.Contains("greenRating"))
+                            greenRating = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
+                        else if (textline.Contains("greenSlope"))
+                            greenSlope = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
+                        else if (textline.Contains("greenPar"))
+                            greenPar = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
                     } while (sr.Peek() != -1);
                 }
             }
             else
             {
-                // The File is missing                            
+                // The File is missing so create it from default values
                 MessageBox.Show("Error: " + hcpFilePath + " FILE NOT FOUND\n" + "\nBy default WCC INFO will used.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 string[] wccInfo = new string[9];
                 /*
@@ -203,7 +215,10 @@ namespace BlueTeeApp
                 wccInfo[5] = "goldPar = "    + goldPar.ToString();
                 wccInfo[6] = "redRating = "  + redRating.ToString();
                 wccInfo[7] = "redSlope = "   + redSlope.ToString();
-                wccInfo[8] = "redPar = "     + redPar.ToString(); 
+                wccInfo[8] = "redPar = "     + redPar.ToString();
+                wccInfo[9] = "greenRating = " + greenRating.ToString();
+                wccInfo[10] = "greenSlope = " + greenSlope.ToString();
+                wccInfo[11] = "greenPar = " + greenPar.ToString();
 
                 File.WriteAllLines(hcpFilePath, wccInfo);
             }
@@ -279,8 +294,6 @@ namespace BlueTeeApp
             // Update the "dummy" Index of the GUEST PLAYER with the value entered HERE
             listBox5.Items[listBox1.SelectedIndex] = teeHCP.ToString();
 
-            golferCourseHcp[listBox1.SelectedIndex] = teeHCP.ToString();
-
             numericUpDown1.Visible = false;
             guestLbl.Visible = false;
             instrLbl.Visible = false;
@@ -303,7 +316,7 @@ namespace BlueTeeApp
 
             try
             {
-                //Check that the Golfer's name and the Golfer's name + '*' aern't in the list already
+                //Check that the Golfer's name and the Golfer's name + '*' aren't in the list already. This prevents multiple entries on mis-clicks                
                 if (!NamePlusCourseHcp.ContainsKey((string)listBox1.SelectedItem) && !NamePlusCourseHcp.ContainsKey((string)(listBox1.SelectedItem + "*")))
                 {
                     string playerID = (string)listBox1.SelectedItem;
@@ -399,8 +412,6 @@ namespace BlueTeeApp
 
                         listBox4.Items.Add(teeHCP);
                     }
-                    playerCnt++;
-                    NamePlusCourseHcp.Add(golferName, teeHCP);
                 }
                 else if (FormTeeSelc.playersTeeBox == 2)
                 {
@@ -453,8 +464,6 @@ namespace BlueTeeApp
                             listBox4.Items.Add(teeHCP);
 
                     }
-                    playerCnt++;
-                    NamePlusCourseHcp.Add(golferName, teeHCP);
                 }
                 else if (FormTeeSelc.playersTeeBox == 3)
                 {
@@ -507,8 +516,6 @@ namespace BlueTeeApp
                             listBox4.Items.Add(teeHCP);
 
                     }
-                    playerCnt++;
-                    NamePlusCourseHcp.Add(golferName, teeHCP);
                 }
                 else if (FormTeeSelc.playersTeeBox == 4)
                 {
@@ -542,14 +549,14 @@ namespace BlueTeeApp
                     {
                         golfersIndex = golfersIndex.Replace('+', '-');
 
-                        teeHCP = Convert.ToSingle(golfersIndex) * 112F / 113F + (62.1F - 72F);
+                        teeHCP = Convert.ToSingle(golfersIndex) * greenSlope / 113 + (greenRating - greenPar);
                         teeHCP = Math.Abs(teeHCP);
                         teeHCP = (float)Math.Round(teeHCP);
                         listBox4.Items.Add("+" + teeHCP);
                     }
                     else
                     {
-                        teeHCP = Convert.ToSingle(golfersIndex) * 112F / 113F + (62.1F - 72F);
+                        teeHCP = Convert.ToSingle(golfersIndex) * greenSlope / 113 + (greenRating - greenPar);
                         teeHCP = (float)Math.Round(teeHCP);
 
                         if (teeHCP < 0)
@@ -561,9 +568,9 @@ namespace BlueTeeApp
                             listBox4.Items.Add(teeHCP);
 
                     }
-                    playerCnt++;
-                    NamePlusCourseHcp.Add(golferName, teeHCP);
                 }
+                playerCnt++;
+                NamePlusCourseHcp.Add((string)listBox1.SelectedItem, teeHCP);
             }
         }
         private void SortRTBlines()
