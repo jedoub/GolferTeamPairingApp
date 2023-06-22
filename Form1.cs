@@ -7,9 +7,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BlueTeeApp
@@ -22,28 +21,40 @@ namespace BlueTeeApp
 
         static Single teeHCP = 0;
             
-        static string hcpIndex = "";
+        static string hcpIndex = "", courseName = null;
 
         static Hashtable NamePlusCourseHcp = new Hashtable();
 
         Form2 twoManForm = new Form2();
         Form3 wolfForm = new Form3();
         FormTeeSelc teeBoxSelc = new FormTeeSelc();
+        EnterSubnetForm guestGolferName = new EnterSubnetForm();
         
         private static int team1g = 0, team2g = 0, team3g = 0, team4g = 0, team5g = 0, team6g = 0, team7g = 0, teamHcp = 0;
         private static int[] goldGolfers = { 0, 0, 0, 0, 0, 0, 0 };
         private static int[] teamsHcpArry = { 0, 0, 0, 0, 0, 0, 0 };
 
         private static string dbcFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\WccGolfers.txt";
-        private static string hcpFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\WccSlopeRating.txt";
+        private static string hcpFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\SlopeRating.txt";
 
         private static string minGoldTeamA = null, minGoldTeamB = null, minGoldTeamC = null, maxGoldTeamA = null, maxGoldTeamB = null, maxGoldTeamC = null;
         private static string goldplayerToReplace = null;
-
+        
         string whiteplayerToReplace = null;
 
         private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
 
+        static readonly string SWver = "SWver: 1_6_22";
+
+        /// <summary>
+        /// Revision History
+        /// 6_17 Added the Course Name to the SlopeRating Txt and displayed it in the APP along with the date.
+        /// 6_20 Added a form to be able to enter the Guest Player's Name.
+        /// 6_21 Corrected a problem; if a person had a last name of Williams it was changing it to Wills
+        /// 6_22 Added A SYNCHRONIZED listBox7 that contains the fist occurence of the first letter of the last name to aid in finding the players name in lisBox1.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Created to assist the group leader build teams on a given day." +
@@ -55,22 +66,88 @@ namespace BlueTeeApp
                 "\nAuthor, johnedoub@gmail.com. Weeks of work led to this.", "APP Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        static readonly string SWver = "SWver: 1_6_14";
         public Form1()
         {
             InitializeComponent();
 
-            // I found this solution on StackOverflow. This triggers the form to close when clicking on the Window's upper-right corner [X].
+            // I found this solution on StackOverflow. This triggers the form to close when clicking on the main Form's upper-right corner [X].
             // Delegate the event to a handler using this style of statement
             FormClosing += MainWin_FormClosing;
+            
+            // I found this solution on StackOverflow. The scroll bar event doesn't sychronize the listBoxes until
+            // the Mouse Button is released. so I put a TextBox over the vertical scoll bar of listBox1 and the user slides listBox7 scollbar to find the players name.
+            EventHandler handler = (s, e) => {
+                if (s == listBox1)
+                    listBox7.TopIndex = listBox1.TopIndex;
+                if (s == listBox7)
+                    listBox1.TopIndex = listBox7.TopIndex;
+            };
+
+            listBox1.MouseCaptureChanged += handler;
+            listBox7.MouseCaptureChanged += handler;
+            listBox1.SelectedIndexChanged += handler;
+            listBox7.SelectedIndexChanged += handler;
         }
 
+        /// <summary>
+        /// Kill all the processes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MainWin_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Process.GetCurrentProcess().Kill();
+            Application.Exit();
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            numericUpDown1.Controls[0].Visible = false;
+
+            swLbl.Text = SWver;            
+
+            if (MessageBox.Show("Is the GHIN Database up-to-date?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                // READ the DBCconfig File
+                transferGHINtoListBox();
+            }
+            else
+            {
+                MessageBox.Show("1) Open GHIN APP and export WCC Golfers,\n" +
+                    "2) Open the newly exported EXCEL file,\n" +
+                    "3) Sort on Gender with the MEN on top (Extended Sort Z->a),\n" +
+                    "4) Copy the NAMES and HCP Index columns down to SARA BREED,\n" +
+                    "5) Click on the [OK] msgBtn, that opens the current file,\n" +
+                    "6) Cut-N-Paste the new info into the old File. Save and Exit.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                try
+                {
+                    var process = Process.Start("notepad.exe", dbcFilePath);
+                    process.WaitForExit();
+                }
+                catch (Exception except)
+                {
+                    System.Windows.Forms.MessageBox.Show(except.Message, "NotePadHelper");
+                }
+                // READ the DBCconfig File
+                transferGHINtoListBox();
+            }
+            if (courseName != null)
+                label7.Text += "  for " + courseName + " on " + DateTime.Now.ToString("dddd, dd MMMM yyyy");
+            else
+                label7.Text += "  for Unknown on " + DateTime.Now.ToString("dddd, dd MMMM yyyy");
+        }
+
+        /// <summary>
+        /// Read two files. First the Club members list (sorted a-Z Already), 2nd the Course details (Rating,Slope,Par)
+        /// Make the names all CAPS and last name First to aid in finding a given player.
+        /// also add 3 guest players to the master list.
+        /// </summary>
         private void transferGHINtoListBox()
         {
             string textline = null, golferName;
 
             //Refresh the list boxes with the latest NAME/HCP INFO
             listBox1.Items.Clear();
+            listBox7.Items.Clear();
             listBox5.Items.Clear();
 
             // READ the DBC File
@@ -88,14 +165,6 @@ namespace BlueTeeApp
 
                         if (textline.Length > 0)
                         {
-                            // Shorten some common names
-                            if (textline.Contains("PATRICK"))
-                                textline = textline.Replace("PATRICK", "PAT");
-                            else if (textline.Contains("WILLIAM"))
-                                textline = textline.Replace("WILLIAM", "WILL");
-                            else if (textline.Contains("RICHARD"))
-                                textline = textline.Replace("RICHARD", "RICH");
-
                             // the endpt is the tab character
                             int endpt = textline.IndexOf("\t");
 
@@ -107,7 +176,18 @@ namespace BlueTeeApp
 
                             // Separate the First and Last name
                             string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-                            // Look for middle initials and SR designation
+
+                            // Shorten some common first names
+                            if (names[0].Contains("PATRICK"))
+                                names[0] = names[0].Replace("PATRICK", "PAT");
+                            else if (names[0].Contains("WILLIAM"))
+                                names[0] = names[0].Replace("WILLIAM", "WILL");
+                            else if (names[0].Contains("RICHARD"))
+                                names[0] = names[0].Replace("RICHARD", "RICH");
+                            else if (names[0].Contains("EDWARD"))
+                                names[0] = names[0].Replace("EDWARD", "ED");
+
+                            // Look for middle initials and SR designation in the 2nd string to put it at the end.
                             if (names.Length == 3)
                             {
                                 if (names[1].Length == 1 || names[1].Contains(".") || names[1].Contains("SR"))
@@ -120,28 +200,59 @@ namespace BlueTeeApp
 
                             // Write them out to a ListBox
                             listBox1.Items.Add(golferName);
+
+                            var firstLetter = golferName.Substring(0, 1);
+
+                            if (listBox7.Items.Contains(firstLetter))
+                            {
+                                listBox7.Items.Add(" ");
+                            }
+                            else
+                                listBox7.Items.Add(firstLetter);
+
                             listBox5.Items.Add(hcpIndex);
+                            
+                            //listBox1.DrawMode = DrawMode.OwnerDrawFixed;                            
+                            //listBox1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ListBox1_DrawItem);                            
                         }
                     } while (sr.Peek() != -1);
                 }
-                // MAke 3 dummy players to allow for guests
-                golferName = "Guest Player";
+                
+                // Make 5 dummy players to allow for guests. The user is prompted later to enter their actual names and HCP index
+                golferName = "Guest Player I";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(12);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
+                listBox7.Items.Add(" ");            //To keep the list Box items the same for scrolling purposes.
 
-                golferName = "Guest Player Jr";
+                golferName = "Guest Player II";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(15);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
+                listBox7.Items.Add(" ");
 
-                golferName = "Guest Player Sr";
+                golferName = "Guest Player III";
                 golferName = golferName.ToUpper();
                 listBox5.Items.Add(10);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
+                listBox7.Items.Add(" ");
+
+                golferName = "Guest Player IV";
+                golferName = golferName.ToUpper();
+                listBox5.Items.Add(10);
+                // Write them out to a ListBox
+                listBox1.Items.Add(golferName);
+                listBox7.Items.Add(" ");
+
+                golferName = "Guest Player V";
+                golferName = golferName.ToUpper();
+                listBox5.Items.Add(10);
+                // Write them out to a ListBox
+                listBox1.Items.Add(golferName);
+                listBox7.Items.Add(" ");
             }
             else
             {
@@ -149,6 +260,7 @@ namespace BlueTeeApp
                 MessageBox.Show("Error: " + dbcFilePath + " FILE NOT FOUND\n" + "\nYou must Associate a WccGolfers.txt file.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 MainWin_FormClosing(null, null);
             }
+
             // READ the Course Rating/Slope/Par File
             if (File.Exists(hcpFilePath))
             {
@@ -187,38 +299,30 @@ namespace BlueTeeApp
                             greenSlope = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
                         else if (textline.Contains("greenPar"))
                             greenPar = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
+                        else if (textline.Contains("Course"))
+                            courseName = textline.Substring(endpt + 2, textline.Length - (endpt + 2));
                     } while (sr.Peek() != -1);
                 }
             }
             else
             {
-                // The File is missing so create it from default values
+                // The File is missing so create it from WCC default values
                 MessageBox.Show("Error: " + hcpFilePath + " FILE NOT FOUND\n" + "\nBy default WCC INFO will used.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                string[] wccInfo = new string[9];
-                /*
-               "whiteRating" = 70.6
-               "whiteSlope"  = 128
-               "whitePar"    = 72
-               "goldRating"  = 66.8
-               "goldSlope "  = 121
-               "goldPar"     = 72
-               "redRating"   = 71.3
-               "redSlope"    = 119
-               "redPar"      = 72
-                */
-
-                wccInfo[0] = "whiteRating = "+ whtRating.ToString();
+                string[] wccInfo = new string[13];
+                               
+                wccInfo[0] = "whiteRating = " + whtRating.ToString();
                 wccInfo[1] = "whiteSlope = " + whtSlope.ToString();
-                wccInfo[2] = "whitePar = "   + whtPar.ToString();
+                wccInfo[2] = "whitePar = " + whtPar.ToString();
                 wccInfo[3] = "goldRating = " + goldRating.ToString();
-                wccInfo[4] = "goldSlope = "  + goldSlope.ToString();
-                wccInfo[5] = "goldPar = "    + goldPar.ToString();
-                wccInfo[6] = "redRating = "  + redRating.ToString();
-                wccInfo[7] = "redSlope = "   + redSlope.ToString();
-                wccInfo[8] = "redPar = "     + redPar.ToString();
+                wccInfo[4] = "goldSlope = " + goldSlope.ToString();
+                wccInfo[5] = "goldPar = " + goldPar.ToString();
+                wccInfo[6] = "redRating = " + redRating.ToString();
+                wccInfo[7] = "redSlope =  " + redSlope.ToString();
+                wccInfo[8] = "redPar = " + redPar.ToString();
                 wccInfo[9] = "greenRating = " + greenRating.ToString();
                 wccInfo[10] = "greenSlope = " + greenSlope.ToString();
                 wccInfo[11] = "greenPar = " + greenPar.ToString();
+                wccInfo[12] = "Course = WCC";
 
                 File.WriteAllLines(hcpFilePath, wccInfo);
             }
@@ -227,6 +331,7 @@ namespace BlueTeeApp
         {
             try
             {
+                // Launch NOTEPAD and open the surrent GHIN Database File
                 var process = Process.Start("notepad.exe", dbcFilePath);
                 process.WaitForExit();
             }
@@ -237,55 +342,6 @@ namespace BlueTeeApp
             // READ the DBCconfig File
             transferGHINtoListBox();
         }
-
-        /// <summary>
-        /// Kill all the processes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MainWin_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            Process.GetCurrentProcess().Kill();
-            Application.Exit();
-        }
-
-        
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            numericUpDown1.Controls[0].Visible = false;
-
-            label7.Text += "  for    " + DateTime.Now.ToString("u").TrimEnd('Z');
-            swLbl.Text = SWver;
-
-            //AutoClosingMessageBox.Show("This APP requires two text Files to be in the Documents folder.\nOne for the GHIN Golfers,\nOne for the Course Slope/Rating/Par.", "APP INFO", 2500);
-
-            if (MessageBox.Show("Is the GHIN Database up-to-date?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                // READ the DBCconfig File
-                transferGHINtoListBox();
-            }
-            else
-            {
-                MessageBox.Show("1) Open GHIN APP and export WCC Golfers,\n" +
-                    "2) Open the newly exported EXCEL file,\n" +
-                    "3) Sort on Gender with the MEN on top (Extended Sort Z->a),\n" +
-                    "4) Copy the NAMES and HCP Index columns down to SARA BREED,\n" +
-                    "5) Click on the [OK] msgBtn, that opens the current file,\n" +
-                    "6) Cut-N-Paste the new info into the old File. Save and Exit.", "Check Information", MessageBoxButtons.OK);
-                try
-                {
-                    var process = Process.Start("notepad.exe", dbcFilePath);
-                    process.WaitForExit();
-                }
-                catch (Exception except)
-                {
-                    System.Windows.Forms.MessageBox.Show(except.Message, "NotePadHelper");
-                }
-                // READ the DBCconfig File
-                transferGHINtoListBox();
-            }
-        }
-
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
         {
             teeHCP = Convert.ToSingle(numericUpDown1.Value);
@@ -303,7 +359,8 @@ namespace BlueTeeApp
         }
 
         /// <summary>
-        /// listBox1_SelectedIndexChanged - When the Master list's Item is Selected it is copied into the Active List. The active list is then executed upon START
+        /// listBox1_SelectedIndexChanged - When the Master list's Item is Selected it is copied into the Active List.
+        /// The user is also prompted to enter the tees the golfer will play from and a course hcp is calculated. Bothe the tees and the hcp and listed.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -316,14 +373,15 @@ namespace BlueTeeApp
 
             try
             {
-                //Check that the Golfer's name and the Golfer's name + '*' aren't in the list already. This prevents multiple entries on mis-clicks                
+                //Check that the Golfer's name and the Golfer's name + '*' aren't in the list already. This prevents multiple selections/entries on mis-clicks                
                 if (!NamePlusCourseHcp.ContainsKey((string)listBox1.SelectedItem) && !NamePlusCourseHcp.ContainsKey((string)(listBox1.SelectedItem + "*")))
                 {
                     string playerID = (string)listBox1.SelectedItem;
 
                     if (playerID.Contains("GUEST"))
                     {
-                        numericUpDown1.Visible = true;
+                        numericUpDown1.Visible = true;  // Enter the players index and then calculate the course HCP based on what tee box is selected
+
                         textBox1.Visible = true;
                         guestLbl.Visible = true;
                         instrLbl.Visible = true;
@@ -362,22 +420,33 @@ namespace BlueTeeApp
             }
             else if (selectionDialog == DialogResult.OK)
             {
+                golferName = (string)listBox1.SelectedItem;
+
+                // Separate the First and Last name
+                string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
+
+                //Reverse the names to show first name last name.
+                if (names.Length == 3)
+                {
+                    if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
+                        golferName = names[1] + " " + names[2] + " " + names[0];
+                    else if (names[2].Length <= 3 && names[2].Length > 0)
+                        golferName = names[1] + " " + names[0] + " " + names[2];
+                }
+                else
+                    golferName = names[1] + " " + names[0];
+
+                // Calculate the course HCP based on what tee box is selected
                 if (FormTeeSelc.playersTeeBox == 1)
                 {
-                    golferName = (string)listBox1.SelectedItem;
-
-                    // Separate the First and Last name
-                    string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-
-                    if (names.Length == 3)
+                    if (golferName.Contains("GUEST"))
                     {
-                        if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
-                            golferName = names[1] + " " + names[2] + " " + names[0];
-                        else if (names[2].Length <= 3 && names[2].Length > 0)
-                            golferName = names[1] + " " + names[0] + " " + names[2];
+                        DialogResult selcDialog;
+
+                        selcDialog = guestGolferName.ShowDialog();
+
+                        golferName = guestGolferName.guestPlayerID;
                     }
-                    else
-                        golferName = names[1] + " " + names[0];
 
                     listBox2.Items.Add(golferName);
 
@@ -409,26 +478,22 @@ namespace BlueTeeApp
                             teeHCP = Math.Abs(teeHCP);
                             listBox4.Items.Add("+" + teeHCP);
                         }
-
-                        listBox4.Items.Add(teeHCP);
+                        else
+                            listBox4.Items.Add(teeHCP);
                     }
                 }
                 else if (FormTeeSelc.playersTeeBox == 2)
                 {
-                    golferName = (string)listBox1.SelectedItem;
-
-                    // Separate the First and Last name
-                    string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-
-                    if (names.Length == 3)
+                    if (golferName.Contains("GUEST"))
                     {
-                        if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
-                            golferName = names[1] + " " + names[2] + " " + names[0] + "*";
-                        else if (names[2].Length <= 3 && names[2].Length > 0)
-                            golferName = names[1] + " " + names[0] + " " + names[2] + "*";
+                        DialogResult selcDialog;
+
+                        selcDialog = guestGolferName.ShowDialog();
+
+                        golferName = guestGolferName.guestPlayerID;
                     }
-                    else
-                        golferName = names[1] + " " + names[0] + "*";
+                    // Add the ASTERISK for the different Tee Box
+                    golferName = golferName + " *";
 
                     listBox2.Items.Add(golferName);
 
@@ -467,20 +532,16 @@ namespace BlueTeeApp
                 }
                 else if (FormTeeSelc.playersTeeBox == 3)
                 {
-                    golferName = (string)listBox1.SelectedItem;
-
-                    // Separate the First and Last name
-                    string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-
-                    if (names.Length == 3)
+                    if (golferName.Contains("GUEST"))
                     {
-                        if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
-                            golferName = names[1] + " " + names[2] + " " + names[0] + "*";
-                        else if (names[2].Length <= 3 && names[2].Length > 0)
-                            golferName = names[1] + " " + names[0] + " " + names[2] + "*";
+                        DialogResult selcDialog;
+
+                        selcDialog = guestGolferName.ShowDialog();
+
+                        golferName = guestGolferName.guestPlayerID;
                     }
-                    else
-                        golferName = names[1] + " " + names[0] + "*";
+                    // Add the ASTERISK for the different Tee Box
+                    golferName = golferName + " *";
 
                     listBox2.Items.Add(golferName);
 
@@ -519,20 +580,16 @@ namespace BlueTeeApp
                 }
                 else if (FormTeeSelc.playersTeeBox == 4)
                 {
-                    golferName = (string)listBox1.SelectedItem;
-
-                    // Separate the First and Last name
-                    string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
-
-                    if (names.Length == 3)
+                    if (golferName.Contains("GUEST"))
                     {
-                        if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
-                            golferName = names[1] + " " + names[2] + " " + names[0] + "*";
-                        else if (names[2].Length <= 3 && names[2].Length > 0)
-                            golferName = names[1] + " " + names[0] + " " + names[2] + "*";
+                        DialogResult selcDialog;
+
+                        selcDialog = guestGolferName.ShowDialog();
+
+                        golferName = guestGolferName.guestPlayerID;
                     }
-                    else
-                        golferName = names[1] + " " + names[0] + "*";
+                    // Add the ASTERISK for the different Tee Box
+                    golferName = golferName + " *";
 
                     listBox2.Items.Add(golferName);
 
@@ -573,6 +630,7 @@ namespace BlueTeeApp
                 NamePlusCourseHcp.Add((string)listBox1.SelectedItem, teeHCP);
             }
         }
+        
         private void SortRTBlines()
         {
             string playerInfo = null;
@@ -664,7 +722,7 @@ namespace BlueTeeApp
                 //Remove the Player's tee HCP
                 teeHCPlist.Remove(teeHCPlist[indx]);
 
-                //After Deletion of the Player; Refresh the listBox4 displaying the TEE Handicap fo each player
+                //After Deletion of the Player; Refresh the listBox4 displaying the TEE Handicap for each player
                 listBox4.Items.Clear();
                 foreach (var item in teeHCPlist)
                     listBox4.Items.Add(item);
@@ -6176,6 +6234,7 @@ namespace BlueTeeApp
 
         private void swapGoldForWhiteFoursome(string minGoldTeam, string maxGoldTeam)
         {
+            //wp => WhitePlayer, gp => GoldPlayer
             int wpIndx = 0, gpIndx = 0;
 
             if (maxGoldTeamA != null && minGoldTeamA != null)
@@ -6186,6 +6245,7 @@ namespace BlueTeeApp
                     //Find a Player of the maxGoldTeam to swap
                     for (gpIndx = 3; gpIndx < 6; gpIndx++)
                     {
+                        //Break out of the loop once a gold tee player is found
                         if (richTextBox2.Lines[gpIndx].Contains("*")) { goldplayerToReplace = richTextBox2.Lines[gpIndx]; break; }
                     }
 
@@ -6195,6 +6255,7 @@ namespace BlueTeeApp
                         //cycle thru white tee players on minGoldTeam
                         for (wpIndx = 9; wpIndx < 12; wpIndx++)
                         {
+                            //Break out of the loop once a white tee player is found and the swap of players is done
                             if (!richTextBox2.Lines[wpIndx].Contains("*"))
                             {
                                 whiteplayerToReplace = richTextBox2.Lines[wpIndx];
@@ -8521,6 +8582,7 @@ namespace BlueTeeApp
             }
             
         }
+        
     }
     public static class ListControlExtensions
     {
@@ -8540,4 +8602,63 @@ namespace BlueTeeApp
             return property.GetValue(item);
         }
     }
+    static class Utility
+    {
+        public static void HighlightText(this RichTextBox myRtb, string word, Color color)
+        {
+
+            if (word == string.Empty)
+                return;
+
+            int s_start = myRtb.SelectionStart, startIndex = 0, index;
+
+            while ((index = myRtb.Text.IndexOf(word, startIndex)) != -1)
+            {
+                myRtb.Select(index, word.Length);
+                myRtb.SelectionColor = color;
+
+                startIndex = index + word.Length;
+            }
+
+            myRtb.SelectionStart = s_start;
+            myRtb.SelectionLength = 0;
+            myRtb.SelectionColor = Color.Black;
+        }
+    }
 }
+/*
+/// <summary>
+/// I experimented with coloring the first person that starts with A, then B, etc. But the Draw mode is too slow in updating the listbox as the user scolls thru the list of names
+/// </summary>
+/// <param name="sender"></param>
+/// <param name="e"></param>
+private void ListBox1_DrawItem(object sender, System.Windows.Forms.DrawItemEventArgs e)
+{
+    // Draw the background of the ListBox control for each item.
+    e.DrawBackground();
+    // Define the default color of the brush as black.
+    Brush myBrush = Brushes.Black;
+
+    // Determine the color of the brush to draw each item based 
+    // on the index of the item to draw.
+    switch (e.Index)
+    {
+        case 0:
+            myBrush = Brushes.Red;
+            break;
+        case 1:
+            myBrush = Brushes.Orange;
+            break;
+        case 2:
+            myBrush = Brushes.Purple;
+            break;
+    }
+
+    // Draw the current item text based on the current Font 
+    // and the custom brush settings.
+    e.Graphics.DrawString(listBox1.Items[e.Index].ToString(),
+        e.Font, myBrush, e.Bounds, StringFormat.GenericDefault);
+    // If the ListBox has focus, draw a focus rectangle around the selected item.
+    e.DrawFocusRectangle();
+}
+*/
