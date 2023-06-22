@@ -59,7 +59,7 @@ namespace BlueTeeApp
             // Initially, the button is not visible.
             btnOK.Visible = false;
             
-            label1.Text = "Enter the player's Name [Lastname First]:";
+            label1.Text = "Enter the player's Name:";
         }
     }
 }
