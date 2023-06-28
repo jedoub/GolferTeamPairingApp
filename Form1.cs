@@ -16,7 +16,7 @@ namespace BlueTeeApp
     public partial class Form1 : Form
     {
         static public Int32 playerCnt = 1, teamCnt = 0, totalHcp = 0;
-        static public bool hideLowManOutBtn = false;
+        static public bool hideLowManOutBtn = false, manualPairing_b = false;
         static public int avgPlayerHcp = 0;
 
         static Single teeHCP = 0;
@@ -44,7 +44,7 @@ namespace BlueTeeApp
 
         private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
 
-        static readonly string SWver = "SWver: 1_6_22";
+        static readonly string SWver = "SWver: 1_6_28";
 
         /// <summary>
         /// Revision History
@@ -52,6 +52,10 @@ namespace BlueTeeApp
         /// 6_20 Added a form to be able to enter the Guest Player's Name.
         /// 6_21 Corrected a problem; if a person had a last name of Williams it was changing it to Wills
         /// 6_22 Added A SYNCHRONIZED listBox7 that contains the fist occurence of the first letter of the last name to aid in finding the players name in lisBox1.
+        /// 6_23 Added the sychronization of ListBox5 that contains the HCP INDX and moved it onto the form to be visible.
+        /// 6_24 The golfer remained in the NamePlusCourseHcp HashTable even though it was deleted from the listBox. This was due to adding the asterik and reversing the player names. 
+        /// 6_25 Added a special pairing feature that allows the leader to pair individuals into teams manually.
+        /// 6_28 Added Code to programmatically add up to 3 TEAMS (3-3's or 3-4's) when manually pairing players.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -78,14 +82,23 @@ namespace BlueTeeApp
             // the Mouse Button is released. so I put a TextBox over the vertical scoll bar of listBox1 and the user slides listBox7 scollbar to find the players name.
             EventHandler handler = (s, e) => {
                 if (s == listBox1)
+                {
                     listBox7.TopIndex = listBox1.TopIndex;
+                    listBox5.TopIndex = listBox1.TopIndex;
+                }
                 if (s == listBox7)
+                {
                     listBox1.TopIndex = listBox7.TopIndex;
+                    listBox5.TopIndex = listBox7.TopIndex;
+                }                    
             };
 
             listBox1.MouseCaptureChanged += handler;
+            listBox5.MouseCaptureChanged += handler;
             listBox7.MouseCaptureChanged += handler;
+            
             listBox1.SelectedIndexChanged += handler;
+            listBox5.SelectedIndexChanged += handler;
             listBox7.SelectedIndexChanged += handler;
         }
 
@@ -221,35 +234,35 @@ namespace BlueTeeApp
                 // Make 5 dummy players to allow for guests. The user is prompted later to enter their actual names and HCP index
                 golferName = "Guest Player I";
                 golferName = golferName.ToUpper();
-                listBox5.Items.Add(12);
+                listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
                 listBox7.Items.Add(" ");            //To keep the list Box items the same for scrolling purposes.
 
                 golferName = "Guest Player II";
                 golferName = golferName.ToUpper();
-                listBox5.Items.Add(15);
+                listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
                 listBox7.Items.Add(" ");
 
                 golferName = "Guest Player III";
                 golferName = golferName.ToUpper();
-                listBox5.Items.Add(10);
+                listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
                 listBox7.Items.Add(" ");
 
                 golferName = "Guest Player IV";
                 golferName = golferName.ToUpper();
-                listBox5.Items.Add(10);
+                listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
                 listBox7.Items.Add(" ");
 
                 golferName = "Guest Player V";
                 golferName = golferName.ToUpper();
-                listBox5.Items.Add(10);
+                listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
                 listBox7.Items.Add(" ");
@@ -366,11 +379,6 @@ namespace BlueTeeApp
         /// <param name="e"></param>
         private void listBox1_SelectedIndexChanged_1(object sender, EventArgs e)
         {
-            // The test Item's value is determined by the listed order. 
-            // The list order is determined by the physical wiring of the relay board.
-            // This way there is a one-to-one relationship of the RELAY ID on the PCB to the List.
-            //playerID[playerCnt] = listBox1.SelectedIndex;
-
             try
             {
                 //Check that the Golfer's name and the Golfer's name + '*' aren't in the list already. This prevents multiple selections/entries on mis-clicks                
@@ -381,6 +389,7 @@ namespace BlueTeeApp
                     if (playerID.Contains("GUEST"))
                     {
                         numericUpDown1.Visible = true;  // Enter the players index and then calculate the course HCP based on what tee box is selected
+                        numericUpDown1.Value = 99;
 
                         textBox1.Visible = true;
                         guestLbl.Visible = true;
@@ -493,7 +502,7 @@ namespace BlueTeeApp
                         golferName = guestGolferName.guestPlayerID;
                     }
                     // Add the ASTERISK for the different Tee Box
-                    golferName = golferName + " *";
+                    golferName = golferName + "*";
 
                     listBox2.Items.Add(golferName);
 
@@ -541,7 +550,7 @@ namespace BlueTeeApp
                         golferName = guestGolferName.guestPlayerID;
                     }
                     // Add the ASTERISK for the different Tee Box
-                    golferName = golferName + " *";
+                    golferName = golferName + "*";
 
                     listBox2.Items.Add(golferName);
 
@@ -589,7 +598,7 @@ namespace BlueTeeApp
                         golferName = guestGolferName.guestPlayerID;
                     }
                     // Add the ASTERISK for the different Tee Box
-                    golferName = golferName + " *";
+                    golferName = golferName + "*";
 
                     listBox2.Items.Add(golferName);
 
@@ -626,7 +635,8 @@ namespace BlueTeeApp
 
                     }
                 }
-                playerCnt++;
+
+                if (++playerCnt > 0) button1.Enabled = true;
                 NamePlusCourseHcp.Add((string)listBox1.SelectedItem, teeHCP);
             }
         }
@@ -682,7 +692,7 @@ namespace BlueTeeApp
 
             LineOfText.RemoveAll(str => String.IsNullOrEmpty(str));
 
-            richTextBox3.Clear();
+            /*richTextBox3.Clear();
 
             for (int i = 0; i < richTextBox1.Lines.Count(); i++)
             {
@@ -697,18 +707,45 @@ namespace BlueTeeApp
                 {
                     richTextBox3.Text += richTextBox1.Lines[i] + "\n";
                 }
-            }
+            }*/
         }
-
+        /// <summary>
+        /// REMOVE PLAYER BUTTON
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
             // Capture the index for removing items
             int indx = listBox2.SelectedIndex;
 
+            if (manualPairing_b == true)
+            {
+                // Add the name to TEAM #1 in richTextBox2 then remove them from the list.
+                richTextBox2.Text += listBox4.Items[indx] + "\t" + listBox2.Items[indx] + "\n";
+            }
+
+
             // Check to see that a Player has been selected in the List
             if (indx != -1)
             {
                 string golfersName = (String)listBox2.SelectedItem;
+                if (golfersName.Contains("*")) 
+                    golfersName = golfersName.TrimEnd('*');
+                
+                // Separate the First and Last name
+                string[] names = golfersName.Trim().Split(new char[] { ' ' }, 3);
+
+                //Reverse the names to show first name last name.
+                if (names.Length == 3)
+                {
+                    if (names[2].Length == 1 || names[2].Contains(".") || names[2].Contains("SR"))
+                        golfersName = names[1] + " " + names[2] + " " + names[0];
+                    else if (names[2].Length <= 3 && names[2].Length > 0)
+                        golfersName = names[1] + " " + names[0] + " " + names[2];
+                }
+                else
+                    golfersName = names[1] + " " + names[0];
 
                 NamePlusCourseHcp.Remove(golfersName);
                 //Remove the Player
@@ -729,8 +766,13 @@ namespace BlueTeeApp
 
                 //After Deletion of the Player; Refresh the number of players in case the player removed was somewhere in the "middle"
                 listBox6.Items.Clear();                
+                
                 //Display the number of players in a column
                 playerCnt--;
+
+                if ((playerCnt - 1) % 2 != 0)
+                    twoManTeamsToolStripMenuItem.Visible = false;
+
                 for (int i = 1; i < playerCnt; i++)
                 {
                     listBox6.Items.Add(i);
@@ -738,6 +780,7 @@ namespace BlueTeeApp
 
                 //After Deletion of the Player; Refresh the listBox3 displaying the TEE TYPE
                 listBox3.Items.Clear();
+
                 for (int i = 0; i < playerCnt - 1; i++)
                 {
                     if (!listBox2.Items[i].ToString().Contains("*"))
@@ -745,9 +788,36 @@ namespace BlueTeeApp
                     else
                         listBox3.Items.Add("GOLD");
                 }
-                richTextBox1.Clear();
-                richTextBox2.Clear();
-                twoManTeamsToolStripMenuItem.Visible = false;
+
+                if (playerCnt == 1)
+                {
+                    button1.Enabled = false;
+                    manualPairing_b = false;
+                }
+                // After the player count has been reduced and if the manual pairing is enabled automatically write the next TEAM number to the textBox when triggered
+                if (manualPairing_b == true)
+                {
+                    if (playerCnt == 4 && (richTextBox2.Text.Contains("for 6") || richTextBox2.Text.Contains("for 9")))
+                    {
+                        if (richTextBox2.Text.Contains("TEAM 2"))
+                        {
+                            richTextBox2.Text += "\nTEAM 3\n";
+                        }
+                        else
+                            richTextBox2.Text += "\nTEAM 2\n";
+                    }
+                    if (playerCnt == 5 && (richTextBox2.Text.Contains("for 8") || richTextBox2.Text.Contains("for 12")))
+                    {
+                        if (richTextBox2.Text.Contains("TEAM 2"))
+                        {
+                            richTextBox2.Text += "\nTEAM 3\n";
+                        }
+                        else
+                            richTextBox2.Text += "\nTEAM 2\n";
+                    }
+                    if (playerCnt == 7 && (richTextBox2.Text.Contains("for 9")))
+                        richTextBox2.Text += "\nTEAM 2\n";
+                }                
             }
             else
             {
@@ -755,7 +825,36 @@ namespace BlueTeeApp
             }
         }
 
+        private void specialPairingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            manualPairing_b = true;
+
+            richTextBox2.Text = "MANUAL DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+            richTextBox2.Text += "TEAM 1\n";
+
+            AutoClosingMessageBox.Show("Select one golfer from the player's listBox at a time.\nThen, use the REMOVE button to place that player on a team.", "Special Team Pairing", 2500);
+        }
+
         private void aBCDToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (manualPairing_b == false)
+            {
+                richTextBox1.Clear();
+                richTextBox2.Clear();
+            }
+            richTextBox2.ForeColor = Color.DarkBlue;
+
+            richTextBox2.Font = new Font("Lucida Console", 10);
+
+            makeABCDteams();            
+        }
+
+        /// <summary>
+        /// This method puts the teams together by writing the richTextBox2 with a particular line organization.
+        /// This allows the second pass of balancing the WHT TEE and GOLD TEE players using a swap of lines.
+        /// 
+        /// </summary>
+        private void makeABCDteams ()
         {
             //for integers
             Random rnd = new Random();
@@ -763,17 +862,15 @@ namespace BlueTeeApp
             int rIntF = 0, rIntB = 0;
             string blindString = null;
 
+            //Initialize variables
             teamCnt = 0; teamHcp = 0;
-            
             avgPlayerHcp = 0;
-            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;            
-
-            richTextBox1.Clear();
-            richTextBox2.Clear();
-
+            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;
             totalHcp = 0;
+
             for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
             {
+                // Add the HCP and Name to the RTB
                 richTextBox1.Text += listBox4.Items[cntr] + "\t" + listBox2.Items[cntr] + "\r\n";
 
                 // Take a PLUS HCP number and make it a NEG number to calculate the total HCP correctly.
@@ -781,34 +878,31 @@ namespace BlueTeeApp
                 {
                     string revSignOfValue = listBox4.Items[cntr].ToString().Replace("+", "-");
                     Int32 plusHCP = Convert.ToInt32(revSignOfValue);
-                    totalHcp += plusHCP; 
+                    totalHcp += plusHCP;
                 }
                 else
                     totalHcp += Convert.ToInt32(listBox4.Items[cntr]);
-                
+
                 // Initialize the gold Tee Golfers Array to zero. This holds the number of players per team playing from the golds.
                 if (cntr < 7) goldGolfers[cntr] = 0;
             }
+
             richTextBox1.Text.Trim();
             // Restore the PLUS HCP number
             richTextBox1.Text = richTextBox1.Text.Replace("+", "-");
-            
+
             // Prep for the SORT RTB function
             richTextBox1.SelectAll();
 
             // Function call to Sort the lines in the richTextBox1
             SortRTBlines();
 
-            richTextBox2.ForeColor = Color.DarkBlue;
-
-            richTextBox2.Font = new Font("Lucida Console", 10);
-
             switch (playerCnt - 1)
             {
                 case 6:
                     teamCnt = 2;
-                    
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt-1).ToString() + " golfers\n";
+
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -820,7 +914,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
-                    
+
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += "TEAM 2\n";
@@ -834,9 +928,9 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[4].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
-                    
+
                     //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0)) 
+                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
                         || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -849,8 +943,8 @@ namespace BlueTeeApp
                     break;
                 case 7:
                     teamCnt = 2;
-                    
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                                            //1
                     richTextBox2.Text += richTextBox1.Lines[1];                                                 //2
                     if (richTextBox1.Lines[1].Contains("*")) team1g++;
@@ -879,12 +973,12 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[4].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                             //11
-                    
+
                     goldGolfers[1] = team2g;
 
                     //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0)) 
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1)) 
+                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
+                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -894,25 +988,25 @@ namespace BlueTeeApp
                     blindString = richTextBox2.Lines[4] + "(F) " +                      //rtb Line11
                             richTextBox2.Lines[5].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
 
-                    changeLine(richTextBox2, 11, blindString);                    
+                    changeLine(richTextBox2, 11, blindString);
 
                     displayTeamHCPcalc(teamCnt);
-                    
+
                     break;
                 case 8:
                     teamCnt = 2;
-                    
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                            //rtb Line1
                     richTextBox2.Text += richTextBox1.Lines[0];                                 //rtb Line2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[3];                                 //rtb Line3
                     if (richTextBox1.Lines[3].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[4];                                 //rtb Line4
                     if (richTextBox1.Lines[4].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                                 //rtb Line5
                     if (richTextBox1.Lines[7].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -923,13 +1017,13 @@ namespace BlueTeeApp
                     richTextBox2.Text += "TEAM 2\n";                                            //rtb Line7
                     richTextBox2.Text += richTextBox1.Lines[1];                                 //rtb Line8
                     if (richTextBox1.Lines[1].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[2];                                 //rtb Line9
                     if (richTextBox1.Lines[2].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[5];                                 //rtb Line10
                     if (richTextBox1.Lines[5].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                                 
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                                 //rtb Line11
                     if (richTextBox1.Lines[6].Contains("*")) team2g++;
                     goldGolfers[1] = team2g;
@@ -940,7 +1034,7 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                        
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
 
@@ -949,11 +1043,11 @@ namespace BlueTeeApp
                     break;
                 case 9:
                     teamCnt = 3;
-                    
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
                     richTextBox2.Text += richTextBox1.Lines[0];                             //2
-                    if (richTextBox1.Lines[0].Contains("*")) team1g++;                      
+                    if (richTextBox1.Lines[0].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[5];                             //3
                     if (richTextBox1.Lines[5].Contains("*")) team1g++;
@@ -995,8 +1089,8 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                     {
-                        determineTeamsToSwap(teamCnt);                     
-                        
+                        determineTeamsToSwap(teamCnt);
+
                         swapGoldForWhiteThreesome();
                     }
                     //Use the +10 to force the program path dow a 3-Person team display
@@ -1004,9 +1098,9 @@ namespace BlueTeeApp
 
                     break;
                 case 10:
-                    teamCnt = 3;                    
+                    teamCnt = 3;
 
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1063,7 +1157,7 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                        
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
 
@@ -1073,7 +1167,7 @@ namespace BlueTeeApp
                 case 11:
                     teamCnt = 3;
 
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n"; 
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
                     richTextBox2.Text += richTextBox1.Lines[2];                             //2
                     if (richTextBox1.Lines[2].Contains("*")) team1g++;
@@ -1093,30 +1187,30 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "TEAM 2\n";                                        //7
                     richTextBox2.Text += richTextBox1.Lines[1];                             //8
-                    if (richTextBox1.Lines[1].Contains("*")) team2g++;                      
+                    if (richTextBox1.Lines[1].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[4];                             //9
-                    if (richTextBox1.Lines[4].Contains("*")) team2g++;                      
+                    if (richTextBox1.Lines[4].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                             //10
-                    if (richTextBox1.Lines[7].Contains("*")) team2g++;                      
+                    if (richTextBox1.Lines[7].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                            //11
-                    if (richTextBox1.Lines[10].Contains("*")) team2g++;                     
+                    if (richTextBox1.Lines[10].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
-                                                                                            
+
                     richTextBox2.Text += Environment.NewLine;                               //12
 
                     richTextBox2.Text += "TEAM 3\n";                                        //13
                     richTextBox2.Text += richTextBox1.Lines[0];                             //14
-                    if (richTextBox1.Lines[0].Contains("*")) team3g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[0].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[5];                             //15
-                    if (richTextBox1.Lines[5].Contains("*")) team3g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[5].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                             //16
-                    if (richTextBox1.Lines[6].Contains("*")) team3g++;                      
+                    if (richTextBox1.Lines[6].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                         //17
                     goldGolfers[2] = team3g;
@@ -1127,10 +1221,10 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                        
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
-                    blindString= richTextBox2.Lines[5] + "(F) " +
+                    blindString = richTextBox2.Lines[5] + "(F) " +
                             richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
 
                     changeLine(richTextBox2, 17, blindString);
@@ -1146,7 +1240,7 @@ namespace BlueTeeApp
                     teamHcp = 0;
                     for (int cntr = 14; cntr < 17; cntr++)
                         teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-                    
+
                     teamHcp += calcTeamHcp(richTextBox2.Lines[10]);
                     changeLine(richTextBox2, 13, richTextBox2.Lines[13] + " HCP = " + teamHcp);
 
@@ -1156,10 +1250,10 @@ namespace BlueTeeApp
                 case 12:
                     if (MessageBox.Show("Do you want to play as THREESOMES?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                        richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                         richTextBox2.Text += "TEAM 1\n";                                        //1
                         richTextBox2.Text += richTextBox1.Lines[0];                             //2
-                        if (richTextBox1.Lines[0].Contains("*")) team1g = 1;                    
+                        if (richTextBox1.Lines[0].Contains("*")) team1g = 1;
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[7];                             //3
                         if (richTextBox1.Lines[7].Contains("*")) team1g++;
@@ -1167,41 +1261,41 @@ namespace BlueTeeApp
                         richTextBox2.Text += richTextBox1.Lines[8];                             //4
                         if (richTextBox1.Lines[8].Contains("*")) team1g++;
                         richTextBox2.Text += Environment.NewLine;
-                        goldGolfers[0] = team1g;                                                
+                        goldGolfers[0] = team1g;
 
                         richTextBox2.Text += Environment.NewLine;                               //5
 
                         richTextBox2.Text += "TEAM 2\n";                                        //6 
                         richTextBox2.Text += richTextBox1.Lines[1];                             //7
-                        if (richTextBox1.Lines[1].Contains("*")) team2g = 1;                    
-                        richTextBox2.Text += Environment.NewLine;                               
+                        if (richTextBox1.Lines[1].Contains("*")) team2g = 1;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[6];                             //8
-                        if (richTextBox1.Lines[6].Contains("*")) team2g++;                      
-                        richTextBox2.Text += Environment.NewLine;                               
+                        if (richTextBox1.Lines[6].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[9];                             //9
-                        if (richTextBox1.Lines[9].Contains("*")) team2g++;                      
-                        richTextBox2.Text += Environment.NewLine;                               
-                        goldGolfers[1] = team2g;                                               
-                                                                                               
+                        if (richTextBox1.Lines[9].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[1] = team2g;
+
                         richTextBox2.Text += Environment.NewLine;                               //10
 
                         richTextBox2.Text += "TEAM 3\n";                                        //11 
                         richTextBox2.Text += richTextBox1.Lines[2];                             //12  
-                        if (richTextBox1.Lines[2].Contains("*")) team3g = 1;                     
-                        richTextBox2.Text += Environment.NewLine;                                
+                        if (richTextBox1.Lines[2].Contains("*")) team3g = 1;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[5];                             //13 
-                        if (richTextBox1.Lines[5].Contains("*")) team3g++;                       
-                        richTextBox2.Text += Environment.NewLine;                               
+                        if (richTextBox1.Lines[5].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[10];                            //14
-                        if (richTextBox1.Lines[10].Contains("*")) team3g++;                       
-                        richTextBox2.Text += Environment.NewLine;                                
-                        goldGolfers[2] = team3g;                                                
-                                                                                                  
+                        if (richTextBox1.Lines[10].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[2] = team3g;
+
                         richTextBox2.Text += Environment.NewLine;                               //15                               
-                                                                                                
+
                         richTextBox2.Text += "TEAM 4\n";                                        //16  
                         richTextBox2.Text += richTextBox1.Lines[3];                             //17 
-                        if (richTextBox1.Lines[3].Contains("*")) team4g = 1;                     
+                        if (richTextBox1.Lines[3].Contains("*")) team4g = 1;
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[4];                             //18
                         if (richTextBox1.Lines[4].Contains("*")) team4g++;
@@ -1217,7 +1311,7 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
-                            
+
                             swapGoldForWhiteThreesome();
                         }
                         //Use the +10 to force the program path dow a 3-Person team display
@@ -1226,7 +1320,7 @@ namespace BlueTeeApp
                     else
                     {
                         teamCnt = 3;
-                        richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                        richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                         richTextBox2.Text += "TEAM 1\n";                                            //1
                         richTextBox2.Text += richTextBox1.Lines[0];                                 //2
                         if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1239,9 +1333,9 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[11];                                //5
                         if (richTextBox1.Lines[11].Contains("*")) team1g++;
-                        richTextBox2.Text += Environment.NewLine;                                   
+                        richTextBox2.Text += Environment.NewLine;
                         goldGolfers[0] = team1g;
-                                                                                                     
+
                         richTextBox2.Text += Environment.NewLine;                                   //6
 
                         richTextBox2.Text += "TEAM 2\n";                                            //7
@@ -1253,27 +1347,27 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[7];                                 //10
                         if (richTextBox1.Lines[7].Contains("*")) team2g++;
-                        richTextBox2.Text += Environment.NewLine;                                   
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[10];                                //11
-                        if (richTextBox1.Lines[10].Contains("*")) team2g++;                         
-                        richTextBox2.Text += Environment.NewLine;                                   
-                        goldGolfers[1] = team2g;                                                     
-                                                                                                     
+                        if (richTextBox1.Lines[10].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[1] = team2g;
+
                         richTextBox2.Text += Environment.NewLine;                                   //12
-                                                                                                     
+
                         richTextBox2.Text += "TEAM 3\n";                                            //13
                         richTextBox2.Text += richTextBox1.Lines[2];                                 //14
-                        if (richTextBox1.Lines[2].Contains("*")) team3g++;                            
-                        richTextBox2.Text += Environment.NewLine;                                    
+                        if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[3];                                 //15
-                        if (richTextBox1.Lines[3].Contains("*")) team3g++;                            
-                        richTextBox2.Text += Environment.NewLine;                                   
+                        if (richTextBox1.Lines[3].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[8];                                 //16
-                        if (richTextBox1.Lines[8].Contains("*")) team3g++;                           
-                        richTextBox2.Text += Environment.NewLine;                                   
+                        if (richTextBox1.Lines[8].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[9];                                 //17
                         if (richTextBox1.Lines[9].Contains("*")) team3g++;
-                        goldGolfers[2] = team3g;                                                                                                                                     
+                        goldGolfers[2] = team3g;
 
                         while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
                         || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
@@ -1281,14 +1375,14 @@ namespace BlueTeeApp
                         {
                             determineTeamsToSwap(teamCnt);
 
-                            
-                            swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);                            
+
+                            swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                         }
                         displayTeamHCPcalc(teamCnt);
                     }
                     break;
                 case 13:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1300,40 +1394,40 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[8].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                             //5
-                    goldGolfers[0] = team1g;                                                    
+                    goldGolfers[0] = team1g;
 
                     richTextBox2.Text += Environment.NewLine;                                   //6                
 
                     richTextBox2.Text += "TEAM 2\n";                                            //7
                     richTextBox2.Text += richTextBox1.Lines[1];                                 //8
                     if (richTextBox1.Lines[1].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                                 //9
-                    if (richTextBox1.Lines[6].Contains("*")) team2g++;                          
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    if (richTextBox1.Lines[6].Contains("*")) team2g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                                 //10
                     if (richTextBox1.Lines[9].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                             //11
                     goldGolfers[1] = team2g;
-                                                                                                //12
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    //12
+                    richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += "TEAM 3\n";                                            //13
                     richTextBox2.Text += richTextBox1.Lines[2];                                 //14
                     if (richTextBox1.Lines[2].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[5];                                 //15
-                    if (richTextBox1.Lines[5].Contains("*")) team3g++;                          
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    if (richTextBox1.Lines[5].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                                //16
-                    if (richTextBox1.Lines[10].Contains("*")) team3g++;                         
-                    richTextBox2.Text += Environment.NewLine;                                   
+                    if (richTextBox1.Lines[10].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                             //17
-                    goldGolfers[2] = team3g;                                                    
-                                                                                                
+                    goldGolfers[2] = team3g;
+
                     richTextBox2.Text += Environment.NewLine;                                   //18
-                                                                                                
+
                     richTextBox2.Text += "TEAM 4\n";                                            //19
                     richTextBox2.Text += richTextBox1.Lines[3];                                 //20
                     if (richTextBox1.Lines[3].Contains("*")) team4g++;
@@ -1369,7 +1463,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 14:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                //1
                     richTextBox2.Text += richTextBox1.Lines[0];                     //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1397,40 +1491,40 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                 //11            
                     goldGolfers[1] = team2g;
-                    teamCnt = 2;                                                    
+                    teamCnt = 2;
 
                     richTextBox2.Text += Environment.NewLine;                       //12
 
                     richTextBox2.Text += "TEAM 3\n";                                //13
                     richTextBox2.Text += richTextBox1.Lines[2];                     //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;              
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[5];                     //15
-                    if (richTextBox1.Lines[5].Contains("*")) team3g++;              
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[5].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                    //16
-                    if (richTextBox1.Lines[10].Contains("*")) team3g++;             
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[10].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];                    //17
-                    if (richTextBox1.Lines[13].Contains("*")) team3g++;             
-                    richTextBox2.Text += Environment.NewLine;                       
-                    goldGolfers[2] = team3g;                                        
-                                                                                    
+                    if (richTextBox1.Lines[13].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[2] = team3g;
+
                     richTextBox2.Text += Environment.NewLine;                       //18
 
                     richTextBox2.Text += "TEAM 4\n";                                //19
                     richTextBox2.Text += richTextBox1.Lines[3];                     //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;              
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[4];                     //21
-                    if (richTextBox1.Lines[4].Contains("*")) team4g++;              
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[4].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[11];                    //22
-                    if (richTextBox1.Lines[11].Contains("*")) team4g++;             
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[11].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[12];                    //23
-                    if (richTextBox1.Lines[12].Contains("*")) team4g++;             
-                    richTextBox2.Text += Environment.NewLine;                       
+                    if (richTextBox1.Lines[12].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;
                     teamCnt = 4;
 
@@ -1453,7 +1547,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 15:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1484,21 +1578,21 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "TEAM 3\n";                            //11 
                     richTextBox2.Text += richTextBox1.Lines[2];                 //12 
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;           
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                 //13 
-                    if (richTextBox1.Lines[7].Contains("*")) team3g++;           
+                    if (richTextBox1.Lines[7].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[12];                //14
-                    if (richTextBox1.Lines[12].Contains("*")) team3g++;           
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[12].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
-                                                                                  
+
                     richTextBox2.Text += Environment.NewLine;                   //15 
-                    
+
                     richTextBox2.Text += "TEAM 4\n";                            //16 
                     richTextBox2.Text += richTextBox1.Lines[3];                 //17 
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;           
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                 //18
                     if (richTextBox1.Lines[6].Contains("*")) team4g++;
@@ -1534,7 +1628,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt + 10);
                     break;
                 case 16:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1581,7 +1675,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];
                     if (richTextBox1.Lines[13].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine; 
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;
@@ -1615,7 +1709,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 17:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                    //1
                     richTextBox2.Text += richTextBox1.Lines[0];                         //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1659,7 +1753,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += "BLIND\n";                                     //17       
                     goldGolfers[2] = team3g;
                     teamCnt = 3;
-                                                                                        //18
+                    //18
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += "TEAM 4\n";                                    //19
@@ -1713,10 +1807,10 @@ namespace BlueTeeApp
                     changeLine(richTextBox2, 11, blindString);
                     changeLine(richTextBox2, 17, blindString);
 
-                    displayTeamHCPcalc(teamCnt); 
+                    displayTeamHCPcalc(teamCnt);
                     break;
                 case 18:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                //1
                     richTextBox2.Text += richTextBox1.Lines[0];                     //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -1747,21 +1841,21 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "TEAM 3\n";                                //11
                     richTextBox2.Text += richTextBox1.Lines[2];                     //12
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;               
-                    richTextBox2.Text += Environment.NewLine;                        
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                     //13
-                    if (richTextBox1.Lines[9].Contains("*")) team3g++;               
+                    if (richTextBox1.Lines[9].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[14];                    //14
-                    if (richTextBox1.Lines[14].Contains("*")) team3g++;               
-                    richTextBox2.Text += Environment.NewLine;                        
+                    if (richTextBox1.Lines[14].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
-                                                                                      
+
                     richTextBox2.Text += Environment.NewLine;                       //15
 
                     richTextBox2.Text += "TEAM 4\n";                                //16
                     richTextBox2.Text += richTextBox1.Lines[3];                     //17
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;               
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[8];                     //18
                     if (richTextBox1.Lines[8].Contains("*")) team4g++;
@@ -1782,7 +1876,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                    //24
                     if (richTextBox1.Lines[16].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine; 
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[4] = team5g;
 
                     richTextBox2.Text += Environment.NewLine;                       //25
@@ -1812,7 +1906,7 @@ namespace BlueTeeApp
 
                     break;
                 case 19:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
                     richTextBox2.Text += richTextBox1.Lines[4];                             //2
                     if (richTextBox1.Lines[4].Contains("*")) team1g++;
@@ -1826,72 +1920,72 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[15];                            //5
                     if (richTextBox1.Lines[15].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[0] = team1g;                                                
+                    goldGolfers[0] = team1g;
 
                     richTextBox2.Text += Environment.NewLine;                               //6
 
                     richTextBox2.Text += "TEAM 2\n";                                        //7
                     richTextBox2.Text += richTextBox1.Lines[1];                             //8
-                    if (richTextBox1.Lines[1].Contains("*")) team2g++;                      
+                    if (richTextBox1.Lines[1].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[8];                             //9
-                    if (richTextBox1.Lines[8].Contains("*")) team2g++;                      
+                    if (richTextBox1.Lines[8].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[11];                            //10
-                    if (richTextBox1.Lines[11].Contains("*")) team2g++;                     
+                    if (richTextBox1.Lines[11].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[18];                            //11 
-                    if (richTextBox1.Lines[18].Contains("*")) team2g++;                     
+                    if (richTextBox1.Lines[18].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[1] = team2g;                                                
-                                                                                            
+                    goldGolfers[1] = team2g;
+
                     richTextBox2.Text += Environment.NewLine;                               //12
 
                     richTextBox2.Text += "TEAM 3\n";                                        //13
                     richTextBox2.Text += richTextBox1.Lines[2];                             //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                             //15
-                    if (richTextBox1.Lines[7].Contains("*")) team3g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[7].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[12];                            //16
-                    if (richTextBox1.Lines[12].Contains("*")) team3g++;                     
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[12].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[17];                            //17 
-                    if (richTextBox1.Lines[17].Contains("*")) team3g++;                     
-                    richTextBox2.Text += Environment.NewLine;                               
-                    goldGolfers[2] = team3g;                                                
-                                                                                            
+                    if (richTextBox1.Lines[17].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[2] = team3g;
+
                     richTextBox2.Text += Environment.NewLine;                               //18
-                                                                                            
+
                     richTextBox2.Text += "TEAM 4\n";                                        //19
                     richTextBox2.Text += richTextBox1.Lines[3];                             //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                             //21
-                    if (richTextBox1.Lines[6].Contains("*")) team4g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[6].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];                            //22
-                    if (richTextBox1.Lines[13].Contains("*")) team4g++;                     
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[13].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                            //23
-                    if (richTextBox1.Lines[16].Contains("*")) team4g++;                     
-                    richTextBox2.Text += Environment.NewLine;                               
-                    goldGolfers[3] = team4g;                                                
-                                                                                            
+                    if (richTextBox1.Lines[16].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[3] = team4g;
+
                     richTextBox2.Text += Environment.NewLine;                               //24
 
                     richTextBox2.Text += "TEAM 5\n";                                        //25
                     richTextBox2.Text += richTextBox1.Lines[0];                             //26
-                    if (richTextBox1.Lines[0].Contains("*")) team5g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[0].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                             //27
-                    if (richTextBox1.Lines[9].Contains("*")) team5g++;                      
-                    richTextBox2.Text += Environment.NewLine;                               
+                    if (richTextBox1.Lines[9].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                            //28
-                    if (richTextBox1.Lines[10].Contains("*")) team5g++;                     
-                    richTextBox2.Text += Environment.NewLine;                               
-                                                                                            //29
+                    if (richTextBox1.Lines[10].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    //29
                     rIntF = rnd.Next(15, 19);
                     do
                     {
@@ -1922,7 +2016,7 @@ namespace BlueTeeApp
 
                     break;
                 case 20:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2020,7 +2114,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 21:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                //1
                     richTextBox2.Text += richTextBox1.Lines[0];                     //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2051,21 +2145,21 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "TEAM 3\n";                                //11
                     richTextBox2.Text += richTextBox1.Lines[2];                     //12
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;               
-                    richTextBox2.Text += Environment.NewLine;                        
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[11];                    //13
-                    if (richTextBox1.Lines[11].Contains("*")) team3g++;              
+                    if (richTextBox1.Lines[11].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                    //14
-                    if (richTextBox1.Lines[16].Contains("*")) team3g++;               
-                    richTextBox2.Text += Environment.NewLine;                        
+                    if (richTextBox1.Lines[16].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
-                                                                                      
+
                     richTextBox2.Text += Environment.NewLine;                       //15
 
                     richTextBox2.Text += "TEAM 4\n";                                //16
                     richTextBox2.Text += richTextBox1.Lines[3];                     //17
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;               
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                    //18
                     if (richTextBox1.Lines[10].Contains("*")) team4g++;
@@ -2128,10 +2222,10 @@ namespace BlueTeeApp
                         swapGoldForWhiteThreesome();
                     }
                     //Use the +10 to force the program path dow a 3-Person team display
-                    displayTeamHCPcalc(teamCnt +10);
+                    displayTeamHCPcalc(teamCnt + 10);
                     break;
                 case 22:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2150,67 +2244,67 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "TEAM 2\n";                            //7
                     richTextBox2.Text += richTextBox1.Lines[1];                 //8
-                    if (richTextBox1.Lines[1].Contains("*")) team2g++;          
+                    if (richTextBox1.Lines[1].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                //9
-                    if (richTextBox1.Lines[10].Contains("*")) team2g++;         
+                    if (richTextBox1.Lines[10].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];                //10
-                    if (richTextBox1.Lines[13].Contains("*")) team2g++;         
+                    if (richTextBox1.Lines[13].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND";                               //11
-                    richTextBox2.Text += Environment.NewLine;                    
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
                     richTextBox2.Text += Environment.NewLine;                   //12
 
                     richTextBox2.Text += "TEAM 3\n";                            //13
                     richTextBox2.Text += richTextBox1.Lines[2];                 //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                 //15
-                    if (richTextBox1.Lines[9].Contains("*")) team3g++; 
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[9].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[14];                //16
-                    if (richTextBox1.Lines[14].Contains("*")) team3g++; 
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[14].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[21];                //17
                     if (richTextBox1.Lines[21].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;                    
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;                   //18
-                    
+
                     richTextBox2.Text += "TEAM 4\n";                            //19
                     richTextBox2.Text += richTextBox1.Lines[3];                 //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[8];                 //21
                     if (richTextBox1.Lines[8].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[15];                //22
                     if (richTextBox1.Lines[15].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[20];                //23
                     if (richTextBox1.Lines[20].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;
 
                     richTextBox2.Text += Environment.NewLine;                   //24
 
                     richTextBox2.Text += "TEAM 5\n";                            //25
                     richTextBox2.Text += richTextBox1.Lines[4];                 //26
-                    if (richTextBox1.Lines[4].Contains("*")) team5g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[4].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                 //27
                     if (richTextBox1.Lines[7].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                //28
                     if (richTextBox1.Lines[16].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[19];                //29
                     if (richTextBox1.Lines[19].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[4] = team5g;
 
                     richTextBox2.Text += Environment.NewLine;                   //30
@@ -2258,7 +2352,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 23:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[5];                 //2
                     if (richTextBox1.Lines[5].Contains("*")) team1g++;
@@ -2273,95 +2367,95 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[18].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
-                                                                               
+
                     richTextBox2.Text += Environment.NewLine;                    //6
 
                     richTextBox2.Text += "TEAM 2\n";                             //7
                     richTextBox2.Text += richTextBox1.Lines[1];                  //8
                     if (richTextBox1.Lines[1].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                  
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                 //9
                     if (richTextBox1.Lines[10].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                  
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];                 //10
                     if (richTextBox1.Lines[13].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                  
-                    richTextBox2.Text += richTextBox1.Lines[22];                 //11
-                    if (richTextBox1.Lines[22].Contains("*")) team2g++;           
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[1] = team2g;                                   
-                                                                                 
+                    richTextBox2.Text += richTextBox1.Lines[22];                 //11
+                    if (richTextBox1.Lines[22].Contains("*")) team2g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[1] = team2g;
+
                     richTextBox2.Text += Environment.NewLine;                    //12
 
                     richTextBox2.Text += "TEAM 3\n";                             //13
                     richTextBox2.Text += richTextBox1.Lines[2];                  //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                  //15
-                    if (richTextBox1.Lines[9].Contains("*")) team3g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[9].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[14];                 //16
-                    if (richTextBox1.Lines[14].Contains("*")) team3g++;        
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[14].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[21];                 //17
-                    if (richTextBox1.Lines[21].Contains("*")) team3g++;          
-                    richTextBox2.Text += Environment.NewLine;                     
-                    goldGolfers[2] = team3g;                                   
-                                                                                 
+                    if (richTextBox1.Lines[21].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[2] = team3g;
+
                     richTextBox2.Text += Environment.NewLine;                    //18
-                                                                                 
+
                     richTextBox2.Text += "TEAM 4\n";                             //19
                     richTextBox2.Text += richTextBox1.Lines[3];                  //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[8];                  //21
-                    if (richTextBox1.Lines[8].Contains("*")) team4g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[8].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[15];                 //22
-                    if (richTextBox1.Lines[15].Contains("*")) team4g++;        
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[15].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[20];                 //23
                     if (richTextBox1.Lines[20].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[3] = team4g;                                   
-                                                                                 
+                    goldGolfers[3] = team4g;
+
                     richTextBox2.Text += Environment.NewLine;                    //24
-                                                                                 
+
                     richTextBox2.Text += "TEAM 5\n";                             //25
                     richTextBox2.Text += richTextBox1.Lines[4];                  //26
-                    if (richTextBox1.Lines[4].Contains("*")) team5g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[4].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                  //27
-                    if (richTextBox1.Lines[7].Contains("*")) team5g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[7].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                 //28
-                    if (richTextBox1.Lines[16].Contains("*")) team5g++;        
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[16].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[19];                 //29
                     if (richTextBox1.Lines[19].Contains("*")) team5g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[4] = team5g;                                   
-                                                                                 
+                    goldGolfers[4] = team5g;
+
                     richTextBox2.Text += Environment.NewLine;                    //30
-                                                                                 
+
                     richTextBox2.Text += "TEAM 6\n";                             //31
                     richTextBox2.Text += richTextBox1.Lines[0];                  //32
-                    if (richTextBox1.Lines[0].Contains("*")) team6g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[0].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[11];                 //33
-                    if (richTextBox1.Lines[11].Contains("*")) team6g++;        
-                    richTextBox2.Text += Environment.NewLine;                    
+                    if (richTextBox1.Lines[11].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[12];                 //34
-                    if (richTextBox1.Lines[12].Contains("*")) team6g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
-                    
+                    if (richTextBox1.Lines[12].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
+
                     rIntF = rnd.Next(18, 23);
                     do
                     {
                         rIntB = rnd.Next(18, 23);
                     } while (rIntF == rIntB);                                   //35
 
-                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " + 
+                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
                         richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
                     if (richTextBox2.Lines[35].Contains("*")) team6g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -2380,7 +2474,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 24:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2395,87 +2489,87 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[23].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
-                                                                                
+
                     richTextBox2.Text += Environment.NewLine;                   //6
 
                     richTextBox2.Text += "TEAM 2\n";                            //7
                     richTextBox2.Text += richTextBox1.Lines[1];                 //8
                     if (richTextBox1.Lines[1].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[10];                //9
                     if (richTextBox1.Lines[10].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                   
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[13];                //10
                     if (richTextBox1.Lines[13].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;                   
-                    richTextBox2.Text += richTextBox1.Lines[22];                //11
-                    if (richTextBox1.Lines[22].Contains("*")) team2g++;          
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[1] = team2g;                                    
-                                                                                
+                    richTextBox2.Text += richTextBox1.Lines[22];                //11
+                    if (richTextBox1.Lines[22].Contains("*")) team2g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[1] = team2g;
+
                     richTextBox2.Text += Environment.NewLine;                   //12                  
 
                     richTextBox2.Text += "TEAM 3\n";                            //13
                     richTextBox2.Text += richTextBox1.Lines[2];                 //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[9];                 //15
-                    if (richTextBox1.Lines[9].Contains("*")) team3g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[9].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[14];                //16
-                    if (richTextBox1.Lines[14].Contains("*")) team3g++;         
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[14].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[21];                //17
-                    if (richTextBox1.Lines[21].Contains("*")) team3g++;         
-                    richTextBox2.Text += Environment.NewLine;                    
-                    goldGolfers[2] = team3g;                                    
-                                                                                
+                    if (richTextBox1.Lines[21].Contains("*")) team3g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[2] = team3g;
+
                     richTextBox2.Text += Environment.NewLine;                   //18
 
                     richTextBox2.Text += "TEAM 4\n";                            //19
                     richTextBox2.Text += richTextBox1.Lines[3];                 //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[8];                 //21
-                    if (richTextBox1.Lines[8].Contains("*")) team4g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[8].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[15];                //22
-                    if (richTextBox1.Lines[15].Contains("*")) team4g++;         
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[15].Contains("*")) team4g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[20];                //23
                     if (richTextBox1.Lines[20].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;                   
-                    goldGolfers[3] = team4g;                                    
-                                                                                
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[3] = team4g;
+
                     richTextBox2.Text += Environment.NewLine;                   //24
-                                                                                
+
                     richTextBox2.Text += "TEAM 5\n";                            //25
                     richTextBox2.Text += richTextBox1.Lines[4];                 //26
-                    if (richTextBox1.Lines[4].Contains("*")) team5g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[4].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[7];                 //27
-                    if (richTextBox1.Lines[7].Contains("*")) team5g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[7].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[16];                //28
-                    if (richTextBox1.Lines[16].Contains("*")) team5g++;         
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[16].Contains("*")) team5g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[19];                //29
                     if (richTextBox1.Lines[19].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;                   
-                    goldGolfers[4] = team5g;                                    
-                                                                                
+                    richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[4] = team5g;
+
                     richTextBox2.Text += Environment.NewLine;                   //30
-                                                                                
+
                     richTextBox2.Text += "TEAM 6\n";                            //31
                     richTextBox2.Text += richTextBox1.Lines[5];                 //32
-                    if (richTextBox1.Lines[5].Contains("*")) team6g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[5].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[6];                 //33
-                    if (richTextBox1.Lines[6].Contains("*")) team6g++;          
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[6].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[17];                //34
-                    if (richTextBox1.Lines[17].Contains("*")) team6g++;         
-                    richTextBox2.Text += Environment.NewLine;                   
+                    if (richTextBox1.Lines[17].Contains("*")) team6g++;
+                    richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[18];                //35
                     if (richTextBox1.Lines[18].Contains("*")) team6g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -2488,13 +2582,13 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                        
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 25:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2505,13 +2599,13 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[14];
                     if (richTextBox1.Lines[14].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    rIntF = rnd.Next(17, 25); 
+                    rIntF = rnd.Next(17, 25);
                     do
                     {
                         rIntB = rnd.Next(17, 25);
                     } while (rIntF == rIntB);
 
-                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " + 
+                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
                         richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -2529,7 +2623,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[15];
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " + 
+                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
                         richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
                     if (richTextBox2.Lines[11].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -2634,7 +2728,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 26:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2645,7 +2739,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[14];
                     if (richTextBox1.Lines[14].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    
+
                     rIntF = rnd.Next(16, 26);
                     do
                     {
@@ -2669,11 +2763,11 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[15];
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;         //10
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " + 
+                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
                         richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
-                    
+
                     richTextBox2.Text += Environment.NewLine;                   //12 
 
                     richTextBox2.Text += "TEAM 3\n";                            //13
@@ -2688,11 +2782,11 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[25];                //17
                     if (richTextBox1.Lines[25].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;                    
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;                   //18
- 
+
                     richTextBox2.Text += "TEAM 4\n";                            //19
                     richTextBox2.Text += richTextBox1.Lines[3];                 //20
                     if (richTextBox1.Lines[3].Contains("*")) team4g++;
@@ -2766,13 +2860,13 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                        
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 27:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[6];                 //2
                     if (richTextBox1.Lines[6].Contains("*")) team1g++;
@@ -2801,7 +2895,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[26];                //11
-                    if (richTextBox1.Lines[26].Contains("*")) team2g++;          
+                    if (richTextBox1.Lines[26].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
@@ -2819,7 +2913,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[25];                //17
                     if (richTextBox1.Lines[25].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;                    
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;                   //18
@@ -2885,13 +2979,13 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[14];                //40
                     if (richTextBox1.Lines[14].Contains("*")) team7g++;
                     richTextBox2.Text += Environment.NewLine;
-                    
+
                     rIntF = rnd.Next(21, 27);
                     do
                     {
                         rIntB = rnd.Next(21, 27);
                     } while (rIntF == rIntB);
-                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " + 
+                    richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
                         richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
                     if (richTextBox2.Lines[richTextBox2.Lines.Length - 1].Contains("*")) team7g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -2911,7 +3005,7 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 28:
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                 //2
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
@@ -2940,7 +3034,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[26];                //11
-                    if (richTextBox1.Lines[26].Contains("*")) team2g++;          
+                    if (richTextBox1.Lines[26].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
@@ -2958,7 +3052,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[25];                //17
                     if (richTextBox1.Lines[25].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;                    
+                    richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;                   //18
@@ -3013,7 +3107,7 @@ namespace BlueTeeApp
                     goldGolfers[5] = team6g;
 
                     richTextBox2.Text += Environment.NewLine;                   //36
-                    
+
                     richTextBox2.Text += "TEAM 7\n";                            //37
                     richTextBox2.Text += richTextBox1.Lines[6];                 //38
                     if (richTextBox1.Lines[6].Contains("*")) team7g++;
@@ -3036,7 +3130,7 @@ namespace BlueTeeApp
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
-                    
+
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
                     displayTeamHCPcalc(teamCnt);
@@ -3045,6 +3139,7 @@ namespace BlueTeeApp
                     MessageBox.Show("Error: The A,B,C,D process is not supported for " + (playerCnt - 1) + " players.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     break;
             }
+
         }
 
         private void displayTeamHCPcalc(int teamsCnt)
@@ -3182,8 +3277,7 @@ namespace BlueTeeApp
 
             richTextBox1.Text = richTextBox1.Text.Replace("+", "-");
 
-            richTextBox2.Clear();
-            richTextBox3.Clear();
+            richTextBox2.Clear();            
 
             richTextBox2.ForeColor = Color.DarkBlue;
             
@@ -3351,7 +3445,7 @@ namespace BlueTeeApp
                         nums[i] = temp;
                     }
 
-                    if (MessageBox.Show("Do you want to play as Foursomes?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (MessageBox.Show("Do you want to play as Two 4-Man teams?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         teamCnt = 2;
 
@@ -3401,9 +3495,9 @@ namespace BlueTeeApp
                     else
                     {
                         // Now your array is randomized and you can simply print them in order
-
+                        AutoClosingMessageBox.Show("Four 2-Man Teams have been selected randomly.", "Information", 2500);
                         // TWO MAN TEAMS FOR 8 PLAYERS
-                        richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
+                        richTextBox2.Text = "Match Teams for RANDOM TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
                         richTextBox2.Text += richTextBox1.Lines[nums[0]];
                         richTextBox2.Text += Environment.NewLine;
@@ -3437,9 +3531,7 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += richTextBox1.Lines[nums[7]];
 
-                        twoManTeamsToolStripMenuItem.Visible = true;
-                        
-                        twoManTeamsToolStripMenuItem_Click(null, null);
+                        hideLowManOutBtn = true;
                     }
 
                     break;
@@ -3525,7 +3617,7 @@ namespace BlueTeeApp
                             nums[i] = temp;
                         }
                         // Now your array is randomized and you can simply print them in order
-
+                        AutoClosingMessageBox.Show("Four 2-Man Teams have been selected randomly.\nThe golfer with the lowest points will be the odd-man-out.", "Information", 2500);
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
                         richTextBox2.Text += richTextBox1.Lines[nums[0]];
@@ -3633,6 +3725,8 @@ namespace BlueTeeApp
 
                         twoManTeamsToolStripMenuItem.Visible = true;
                         twoManTeamsToolStripMenuItem_Click(null, null);
+
+                        hideLowManOutBtn = true;
                     }
                     else
                     {
@@ -5058,7 +5152,7 @@ namespace BlueTeeApp
                         nums[i] = temp;
                     }
                     // Now your array is randomized and you can simply print them in order
-                    richTextBox2.Text = "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                    richTextBox2.Text = "RANDOM DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                //1
                     richTextBox2.Text += richTextBox1.Lines[nums[0]];                     //2
                     if (richTextBox1.Lines[nums[0]].Contains("*")) team1g++;
