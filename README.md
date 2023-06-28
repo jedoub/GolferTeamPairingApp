@@ -1,5 +1,5 @@
 # GolferTeamPairingApp
-Using a list of golfers & their Hcp Indexes, teams are selected by ABCD ranking using the Course HCP or Randomly.
+Using a list of golfers & their Hcp Indexes, teams are selected using ABCD ranking based on their Course HCP, manually or Randomly.
 The list of players and their indexes is a text file exported from the GHIN database.
 A SlopeRating text file is also included to detail 4 sets of tees (White,Gold, Red, Green).
 As players are selected they are added to a separate listBox to build a list of players for a given day.
