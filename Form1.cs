@@ -9,16 +9,16 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace BlueTeeApp
 {
     public partial class Form1 : Form
     {
-        static public Int32 playerCnt = 1, teamCnt = 0, totalHcp = 0;
+        static public Int32 playerCnt = 1, teamCnt = 0;
         static public bool hideLowManOutBtn = false, manualPairing_b = false;
-        static public int avgPlayerHcp = 0;
-
+        
         static Single teeHCP = 0;
             
         static string hcpIndex = "", courseName = null;
@@ -44,7 +44,7 @@ namespace BlueTeeApp
 
         private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
 
-        static readonly string SWver = "SWver: 1_6_28";
+        static readonly string SWver = "SWver: 1_7_03";
 
         /// <summary>
         /// Revision History
@@ -56,6 +56,9 @@ namespace BlueTeeApp
         /// 6_24 The golfer remained in the NamePlusCourseHcp HashTable even though it was deleted from the listBox. This was due to adding the asterik and reversing the player names. 
         /// 6_25 Added a special pairing feature that allows the leader to pair individuals into teams manually.
         /// 6_28 Added Code to programmatically add up to 3 TEAMS (3-3's or 3-4's) when manually pairing players.
+        /// 6_29 Optimized the code when making manual pairings of Teams.
+        /// 6_30 Added the sorting function of the players listBox when pairing manually.
+        /// 7_03 Added the Team Handicap Calculation and display of the results when manually picking teams .
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -237,7 +240,7 @@ namespace BlueTeeApp
                 listBox5.Items.Add(99);
                 // Write them out to a ListBox
                 listBox1.Items.Add(golferName);
-                listBox7.Items.Add(" ");            //To keep the list Box items the same for scrolling purposes.
+                listBox7.Items.Add(" ");            //To keep the list Box items lined up the same for scrolling purposes.
 
                 golferName = "Guest Player II";
                 golferName = golferName.ToUpper();
@@ -669,7 +672,7 @@ namespace BlueTeeApp
             string[][] grid = new string[lines.Length][];
             for (int i = 0; i < lines.Length; i++)
             {
-                grid[i] = lines[i].Split('\t', (char)StringSplitOptions.RemoveEmptyEntries); // split on whitespace
+                grid[i] = lines[i].Split('\t', (char)StringSplitOptions.RemoveEmptyEntries); // split on character (whitespace or TAB)
             }
             
             //Array.Sort(lines, delegate (string str1, string str2) { return str1.CompareTo(str2); });
@@ -681,7 +684,10 @@ namespace BlueTeeApp
 
             for (int cnt = 0; cnt < joinedText.Count; cnt++)
             {
-                playerInfo += String.Join(" ", joinedText[cnt]) + "\n";             
+                //if (manualPairing_b == true)
+                    playerInfo += String.Join("\t", joinedText[cnt]) + "\n";
+                //else
+                    //playerInfo += String.Join(" ", joinedText[cnt]) + "\n";
             }
 
             richTextBox1.Text = playerInfo;
@@ -691,23 +697,6 @@ namespace BlueTeeApp
             LineOfText = lines.ToList<string>();
 
             LineOfText.RemoveAll(str => String.IsNullOrEmpty(str));
-
-            /*richTextBox3.Clear();
-
-            for (int i = 0; i < richTextBox1.Lines.Count(); i++)
-            {
-                if (richTextBox1.Lines[i].Contains("*")) 
-                {
-                    richTextBox3.Text += "*" + richTextBox1.Lines[i] + "\n";
-                }
-            }
-            for (int i = 0; i < richTextBox1.Lines.Count(); i++)
-            {
-                if (!richTextBox1.Lines[i].Contains("*"))
-                {
-                    richTextBox3.Text += richTextBox1.Lines[i] + "\n";
-                }
-            }*/
         }
         /// <summary>
         /// REMOVE PLAYER BUTTON
@@ -747,77 +736,96 @@ namespace BlueTeeApp
                 else
                     golfersName = names[1] + " " + names[0];
 
+                //Remove their name from the HashTable so they can be selected if they come later and they were originally mistakenly selected.
                 NamePlusCourseHcp.Remove(golfersName);
-                //Remove the Player
-                listBox2.Items.Remove(listBox2.SelectedItem);
 
-                //Capture the items in the Tee HCP listBox4
+                //Remove the Player the TeeBox and the TeeHcp from the listBoxes
+                listBox2.Items.Remove(listBox2.SelectedItem);
+                playerCnt--;                
+                
+                //After Deletion of the Player; Refresh the listBox3 displaying the TEE COLOR
+                listBox3.Items.Clear();
+
+                //After Deletion of the Player;
+                //Capture the items in the listBox4 displaying the TEE Handicap for each player
                 var teeHCPlist = new List<string>();
                 foreach (var item in listBox4.Items)
                     teeHCPlist.Add(item.ToString());
 
-                //Remove the Player's tee HCP
+                //Remove the Deleted Player's tee HCP
                 teeHCPlist.Remove(teeHCPlist[indx]);
 
-                //After Deletion of the Player; Refresh the listBox4 displaying the TEE Handicap for each player
+                //Refresh the listBox4 displaying the TEE HCPs
                 listBox4.Items.Clear();
-                foreach (var item in teeHCPlist)
-                    listBox4.Items.Add(item);
 
                 //After Deletion of the Player; Refresh the number of players in case the player removed was somewhere in the "middle"
-                listBox6.Items.Clear();                
+                listBox6.Items.Clear();         
                 
-                //Display the number of players in a column
-                playerCnt--;
-
-                if ((playerCnt - 1) % 2 != 0)
-                    twoManTeamsToolStripMenuItem.Visible = false;
-
+                
+                //RE-ADD all the players info
                 for (int i = 1; i < playerCnt; i++)
                 {
-                    listBox6.Items.Add(i);
-                }
+                    listBox6.Items.Add(i);  //PlayerNum
 
-                //After Deletion of the Player; Refresh the listBox3 displaying the TEE TYPE
-                listBox3.Items.Clear();
+                    listBox4.Items.Add(teeHCPlist[i-1]);    //CourseHcp
 
-                for (int i = 0; i < playerCnt - 1; i++)
-                {
-                    if (!listBox2.Items[i].ToString().Contains("*"))
+                    if (!listBox2.Items[i-1].ToString().Contains("*"))  //TeeColor
                         listBox3.Items.Add("WHITE");
                     else
                         listBox3.Items.Add("GOLD");
                 }
 
-                if (playerCnt == 1)
-                {
-                    button1.Enabled = false;
-                    manualPairing_b = false;
-                }
+                if ((playerCnt - 1) % 2 != 0)
+                    twoManTeamsToolStripMenuItem.Visible = false;
+                
                 // After the player count has been reduced and if the manual pairing is enabled automatically write the next TEAM number to the textBox when triggered
                 if (manualPairing_b == true)
                 {
+                    // Manual pairing is currently for up to 3 teams and if there are 12 players only 4 man teams are supported.
+
                     if (playerCnt == 4 && (richTextBox2.Text.Contains("for 6") || richTextBox2.Text.Contains("for 9")))
                     {
                         if (richTextBox2.Text.Contains("TEAM 2"))
                         {
                             richTextBox2.Text += "\nTEAM 3\n";
+                            teamCnt = 13;   //3-man teams use 10+3
                         }
                         else
+                        {
                             richTextBox2.Text += "\nTEAM 2\n";
+                            teamCnt = 12;   //3-man teams use 10+2
+                        }
                     }
                     if (playerCnt == 5 && (richTextBox2.Text.Contains("for 8") || richTextBox2.Text.Contains("for 12")))
                     {
                         if (richTextBox2.Text.Contains("TEAM 2"))
                         {
                             richTextBox2.Text += "\nTEAM 3\n";
+                            teamCnt = 3;
                         }
                         else
+                        {
+                            richTextBox2.Text += "\nTEAM 2\n";
+                            teamCnt = 2;
+                        }
+                    }
+                    if (playerCnt == 7 && richTextBox2.Text.Contains("for 9"))
+                    {
+                        richTextBox2.Text += "\nTEAM 2\n";
+                    }
+                    if (playerCnt == 9 && richTextBox2.Text.Contains("for 12"))
+                    {
                             richTextBox2.Text += "\nTEAM 2\n";
                     }
-                    if (playerCnt == 7 && (richTextBox2.Text.Contains("for 9")))
-                        richTextBox2.Text += "\nTEAM 2\n";
-                }                
+                }
+                
+                if (playerCnt == 1)
+                {
+                    button1.Enabled = false;
+                    manualPairing_b = false;
+
+                    displayTeamHCPcalc(teamCnt);
+                }
             }
             else
             {
@@ -828,6 +836,47 @@ namespace BlueTeeApp
         private void specialPairingToolStripMenuItem_Click(object sender, EventArgs e)
         {
             manualPairing_b = true;
+            richTextBox1.Clear();
+            richTextBox2.Clear();
+            richTextBox2.ForeColor = Color.DarkBlue;
+
+            richTextBox2.Font = new Font("Lucida Console", 10);
+
+            for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
+            {
+                // Add the HCP and Name to the RTB
+                richTextBox1.Text += listBox4.Items[cntr] + "\t" + listBox2.Items[cntr] + "\n";
+
+                // Initialize the gold Tee Golfers Array to zero [max of 7 teams]. This array holds the number of players per team playing from the golds.
+                if (cntr < 7) goldGolfers[cntr] = 0;
+            }            
+
+            // Restore the PLUS HCP number
+            richTextBox1.Text = richTextBox1.Text.Replace("+", "-");
+
+            // Prep for the SORT RTB function
+            richTextBox1.SelectAll();
+
+            // Function call to Sort the lines in the richTextBox1
+            SortRTBlines();
+
+            listBox2.Items.Clear();
+            listBox3.Items.Clear();
+            listBox4.Items.Clear();
+
+            for (int cntr = 0; cntr < (richTextBox1.Lines.Length - 1); cntr++)
+            {
+                // the endpt is the tab character
+                int endpt = richTextBox1.Lines[cntr].IndexOf('\t');
+
+                listBox4.Items.Add(richTextBox1.Lines[cntr].Substring(0, endpt));
+                listBox2.Items.Add(richTextBox1.Lines[cntr].Substring(endpt + 1, richTextBox1.Lines[cntr].Length - (endpt + 1)));
+
+                if (!richTextBox1.Lines[cntr].Contains("*"))  //TeeColor
+                    listBox3.Items.Add("WHITE");
+                else
+                    listBox3.Items.Add("GOLD");
+            }
 
             richTextBox2.Text = "MANUAL DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
             richTextBox2.Text += "TEAM 1\n";
@@ -837,14 +886,31 @@ namespace BlueTeeApp
 
         private void aBCDToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (manualPairing_b == false)
-            {
-                richTextBox1.Clear();
-                richTextBox2.Clear();
-            }
+            manualPairing_b = false;
+            richTextBox1.Clear();
+            richTextBox2.Clear();
             richTextBox2.ForeColor = Color.DarkBlue;
 
             richTextBox2.Font = new Font("Lucida Console", 10);
+
+            for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
+            {
+                // Add the HCP and Name to the RTB
+                richTextBox1.Text += listBox4.Items[cntr] + "\t" + listBox2.Items[cntr] + "\n";
+
+                // Initialize the gold Tee Golfers Array to zero [max of 7 teams]. This array holds the number of players per team playing from the golds.
+                if (cntr < 7) goldGolfers[cntr] = 0;
+            }
+
+            richTextBox1.Text.Trim();
+            // Restore the PLUS HCP number
+            richTextBox1.Text = richTextBox1.Text.Replace("+", "-");
+
+            // Prep for the SORT RTB function
+            richTextBox1.SelectAll();
+
+            // Function call to Sort the lines in the richTextBox1
+            SortRTBlines();
 
             makeABCDteams();            
         }
@@ -864,38 +930,7 @@ namespace BlueTeeApp
 
             //Initialize variables
             teamCnt = 0; teamHcp = 0;
-            avgPlayerHcp = 0;
-            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;
-            totalHcp = 0;
-
-            for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
-            {
-                // Add the HCP and Name to the RTB
-                richTextBox1.Text += listBox4.Items[cntr] + "\t" + listBox2.Items[cntr] + "\r\n";
-
-                // Take a PLUS HCP number and make it a NEG number to calculate the total HCP correctly.
-                if (listBox4.Items[cntr].ToString().Contains("+"))
-                {
-                    string revSignOfValue = listBox4.Items[cntr].ToString().Replace("+", "-");
-                    Int32 plusHCP = Convert.ToInt32(revSignOfValue);
-                    totalHcp += plusHCP;
-                }
-                else
-                    totalHcp += Convert.ToInt32(listBox4.Items[cntr]);
-
-                // Initialize the gold Tee Golfers Array to zero. This holds the number of players per team playing from the golds.
-                if (cntr < 7) goldGolfers[cntr] = 0;
-            }
-
-            richTextBox1.Text.Trim();
-            // Restore the PLUS HCP number
-            richTextBox1.Text = richTextBox1.Text.Replace("+", "-");
-
-            // Prep for the SORT RTB function
-            richTextBox1.SelectAll();
-
-            // Function call to Sort the lines in the richTextBox1
-            SortRTBlines();
+            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;            
 
             switch (playerCnt - 1)
             {
@@ -1228,28 +1263,15 @@ namespace BlueTeeApp
                             richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
 
                     changeLine(richTextBox2, 17, blindString);
-                    teamHcp = 0;
-                    for (int cntr = 2; cntr < 6; cntr++)                    //4man team
-                        teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-                    changeLine(richTextBox2, 1, richTextBox2.Lines[1] + " HCP = " + teamHcp);
-
-                    teamHcp = 0;
-                    for (int cntr = 8; cntr < 12; cntr++)
-                        teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-                    changeLine(richTextBox2, 7, richTextBox2.Lines[7] + " HCP = " + teamHcp);
-                    teamHcp = 0;
-                    for (int cntr = 14; cntr < 17; cntr++)
-                        teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-
-                    teamHcp += calcTeamHcp(richTextBox2.Lines[10]);
-                    changeLine(richTextBox2, 13, richTextBox2.Lines[13] + " HCP = " + teamHcp);
-
+                                        
                     displayTeamHCPcalc(teamCnt);
 
                     break;
                 case 12:
                     if (MessageBox.Show("Do you want to play as THREESOMES?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
+                        teamCnt = 4;
+
                         richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                         richTextBox2.Text += "TEAM 1\n";                                        //1
                         richTextBox2.Text += richTextBox1.Lines[0];                             //2
@@ -1303,8 +1325,7 @@ namespace BlueTeeApp
                         richTextBox2.Text += richTextBox1.Lines[11];                            //19
                         if (richTextBox1.Lines[11].Contains("*")) team4g++;
                         richTextBox2.Text += Environment.NewLine;
-                        goldGolfers[3] = team4g;
-                        teamCnt = 4;
+                        goldGolfers[3] = team4g;                        
 
                         while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
                         || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
@@ -1320,6 +1341,7 @@ namespace BlueTeeApp
                     else
                     {
                         teamCnt = 3;
+
                         richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                         richTextBox2.Text += "TEAM 1\n";                                            //1
                         richTextBox2.Text += richTextBox1.Lines[0];                                 //2
@@ -1382,6 +1404,8 @@ namespace BlueTeeApp
                     }
                     break;
                 case 13:
+                    teamCnt = 4;
+                    
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                            //1
                     richTextBox2.Text += richTextBox1.Lines[0];                                 //2
@@ -1442,8 +1466,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[12].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;                                                    //24
-                    teamCnt = 4;
-
+                    
                     // If there are multiple teams that have 3 Gold and One White run the swap again
                     while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
                         || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
@@ -1463,6 +1486,8 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 14:
+                    teamCnt = 4;
+
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                //1
                     richTextBox2.Text += richTextBox1.Lines[0];                     //2
@@ -1490,8 +1515,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[9].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                 //11            
-                    goldGolfers[1] = team2g;
-                    teamCnt = 2;
+                    goldGolfers[1] = team2g;                    
 
                     richTextBox2.Text += Environment.NewLine;                       //12
 
@@ -1526,7 +1550,6 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[12].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;
-                    teamCnt = 4;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
                     while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
@@ -1628,6 +1651,8 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt + 10);
                     break;
                 case 16:
+                    teamCnt = 4;
+
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
@@ -1693,8 +1718,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[12];
                     if (richTextBox1.Lines[12].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[3] = team4g;
-                    teamCnt = 4;
+                    goldGolfers[3] = team4g;                    
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
                     while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
@@ -1709,6 +1733,8 @@ namespace BlueTeeApp
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 17:
+                    teamCnt = 5;
+                    
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                    //1
                     richTextBox2.Text += richTextBox1.Lines[0];                         //2
@@ -1787,8 +1813,7 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[15];                        //30
                     if (richTextBox1.Lines[15].Contains("*")) team5g++;
                     goldGolfers[4] = team5g;
-                    teamCnt = 5;
-
+                    
                     // If there are multiple teams that have 3 Gold and One White run the swap again
                     while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
                         || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
@@ -1906,6 +1931,8 @@ namespace BlueTeeApp
 
                     break;
                 case 19:
+                    teamCnt = 5;
+
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
                     richTextBox2.Text += richTextBox1.Lines[4];                             //2
@@ -1998,8 +2025,7 @@ namespace BlueTeeApp
                     //Change the BLIND LINE and Correct for GOLD player if necessary                    
                     if (richTextBox2.Lines[29].Contains("*")) team5g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[4] = team5g;
-                    teamCnt = 5;
+                    goldGolfers[4] = team5g;                    
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
                     while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
@@ -3262,6 +3288,7 @@ namespace BlueTeeApp
 
             int rIntF = 0, rIntB = 0;
 
+            manualPairing_b = false; 
             richTextBox1.Clear();
 
             for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
@@ -3869,9 +3896,7 @@ namespace BlueTeeApp
                     else
                     {
                         MessageBox.Show("Four Man Teams will be selected using a BLIND DRAW.", "Information", MessageBoxButtons.OK);
-                        //Odd number of players                        
-                        //so add a BLIND DRAW
-                        avgPlayerHcp = totalHcp / 11;
+                        //Odd number of players                                                
                         
                         nums = Enumerable.Range(0, 11).ToArray();
                         shuffle = new Random();
@@ -3949,22 +3974,7 @@ namespace BlueTeeApp
                                 richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
 
                         changeLine(richTextBox2, 17, blindString);
-                        teamHcp = 0;
-                        for (int cntr = 2; cntr < 6; cntr++)                    //4man team
-                            teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-                        changeLine(richTextBox2, 1, richTextBox2.Lines[1] + " HCP = " + teamHcp);
-
-                        teamHcp = 0;
-                        for (int cntr = 8; cntr < 12; cntr++)
-                            teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-                        changeLine(richTextBox2, 7, richTextBox2.Lines[7] + " HCP = " + teamHcp);
-                        teamHcp = 0;
-                        for (int cntr = 14; cntr < 17; cntr++)
-                            teamHcp += calcTeamHcp(richTextBox2.Lines[cntr]);
-
-                        teamHcp += calcTeamHcp(richTextBox2.Lines[10]);
-                        changeLine(richTextBox2, 13, richTextBox2.Lines[13] + " HCP = " + teamHcp);
-
+                        
                         displayTeamHCPcalc(teamCnt);
                     }
                     break;
@@ -6283,7 +6293,7 @@ namespace BlueTeeApp
                 richTextBox1.Text += listBox2.Items[cntr] + "\n\n";
                 
                 string playersName = listBox2.Items[cntr].ToString();
-
+                // Shorten the name so that it algins with the points across the bottom to make the X-axis names
                 if (playersName.Length >= 12)
                 {
                     int indx = playersName.IndexOf(" ");
@@ -8596,7 +8606,12 @@ namespace BlueTeeApp
 
         private Int32 calcTeamHcp (string rtbLine)
         {
-            int loc = rtbLine.IndexOf(" ");
+            int loc;
+            //if (manualPairing_b == true)
+                loc = rtbLine.IndexOf("\t");
+            //else
+                //loc = rtbLine.IndexOf(" ");
+
             string hcp = rtbLine.Substring(0, loc);
 
             string revSignOfValue = hcp.Replace("+", "-");
