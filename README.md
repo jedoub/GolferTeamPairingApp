@@ -15,3 +15,5 @@ This form shows the random pairings, with an option to kick out the low point sc
 The winning teams are highlighted (Front, Back, Total), as well as the highpoint player.
 If there are just 5 players, another special form for WOLF (an individual game for 5) is opened. 
 This form has the calculations of the players point differentials used to in-turn to calculate the cash payouts.
+Finally, in an effort to prevent the same players playing on a team consecutive days I save the pairings an note the team they were on.
+The group leader can manually swap players after the new pairings are made where necessary.
