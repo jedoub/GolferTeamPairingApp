@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -30,12 +29,16 @@ namespace BlueTeeApp
         FormTeeSelc teeBoxSelc = new FormTeeSelc();
         EnterSubnetForm guestGolferName = new EnterSubnetForm();
         
-        private static int team1g = 0, team2g = 0, team3g = 0, team4g = 0, team5g = 0, team6g = 0, team7g = 0, teamHcp = 0;
+        private static int team1g = 0, team2g = 0, team3g = 0, team4g = 0, team5g = 0, team6g = 0, team7g = 0, teamHcp = 0, teamState = 0, lineIndex = 0;
         private static int[] goldGolfers = { 0, 0, 0, 0, 0, 0, 0 };
         private static int[] teamsHcpArry = { 0, 0, 0, 0, 0, 0, 0 };
+        private static int[,] previousTeammatesArry = { { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0 } };
+        private static int[,] previousTeammatesLineNum = new int [8,4];
 
         private static string dbcFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\WccGolfers.txt";
         private static string hcpFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\SlopeRating.txt";
+        private static string lrpFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + "\\LastRoundPairings.txt";
 
         private static string minGoldTeamA = null, minGoldTeamB = null, minGoldTeamC = null, maxGoldTeamA = null, maxGoldTeamB = null, maxGoldTeamC = null;
         private static string goldplayerToReplace = null;
@@ -43,8 +46,8 @@ namespace BlueTeeApp
         string whiteplayerToReplace = null;
 
         private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
-
-        static readonly string SWver = "SWver: 1_7_03";
+        
+        static readonly string SWver = "SWver: 1_7_26";
 
         /// <summary>
         /// Revision History
@@ -58,7 +61,11 @@ namespace BlueTeeApp
         /// 6_28 Added Code to programmatically add up to 3 TEAMS (3-3's or 3-4's) when manually pairing players.
         /// 6_29 Optimized the code when making manual pairings of Teams.
         /// 6_30 Added the sorting function of the players listBox when pairing manually.
-        /// 7_03 Added the Team Handicap Calculation and display of the results when manually picking teams .
+        /// 7_03 Added the Team Handicap Calculation and display of the results when manually picking teams.
+        /// 7_06 Added saving a text file of the teams. This file is then used to compare team players from the previous round to the current round to prevent the same pairing on consecutive rounds.
+        /// 7_10 Corrected the Team dsignation being duplicated for Tom Beck/ Tom Beck Jr. Added the date to the previous round pairings text file.
+        /// 7_26 Corrected a problem when saving the previous pairings text file. I had a mistake when deleting the _N designation and * tee designation meta-characters.
+        /// 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -112,6 +119,25 @@ namespace BlueTeeApp
         /// <param name="e"></param>
         private void MainWin_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (MessageBox.Show("Do you want to save today's pairings?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                // Add the DATE to the 1st Line
+                changeLine(richTextBox2, 0, richTextBox2.Lines[0].Replace(" golfers", " golfers on " + DateTime.Now.ToString("dddd, dd MMMM yyyy") + "\n"));
+
+                // Remove the previous team notation [_N] from the LastRoundPairings, along with the Gold tee notation [*]
+                richTextBox2.Text = Regex.Replace(richTextBox2.Text, @"(_1|_2|_3|_4|_5|_6|_7|\*)", "", RegexOptions.Multiline);
+
+                // Remove any empty Lines using Regex metacharater macro.
+                // ^, $ => Matches the beginning and end of the line, respectively
+                // \s => Predefined character group whitespace or tab
+                // ( ) => Capturing group used to create a sub-expression
+                // | => Matches expression on either side of expression; has lowest priority of any operator
+
+                richTextBox2.Text = Regex.Replace(richTextBox2.Text, @"^\s*$(\n|\r|\r\n)", "", RegexOptions.Multiline);
+
+                File.WriteAllLines(lrpFilePath, richTextBox2.Lines);
+            }
+
             Process.GetCurrentProcess().Kill();
             Application.Exit();
         }
@@ -165,6 +191,100 @@ namespace BlueTeeApp
             listBox1.Items.Clear();
             listBox7.Items.Clear();
             listBox5.Items.Clear();
+            richTextBox3.Clear();
+
+            // READ the Last Round Pairings File
+            if (File.Exists(lrpFilePath))
+            {
+                // Read the file into memory
+                using (FileStream fs = new FileStream(lrpFilePath, FileMode.Open, FileAccess.Read, share: FileShare.Read))
+                using (var sr = new StreamReader(fs, Encoding.UTF8))
+                {
+                    textline = sr.ReadLine();   // Thow out the 1st Line of the File
+                    if (textline != null)
+                    {
+                        do
+                        {
+                            textline = sr.ReadLine();
+                            // Look for the start of the Team X
+                            if (textline.Contains("TEAM 1")) teamState = 1;
+                            else if (textline.Contains("TEAM 2")) teamState = 2;
+                            else if (textline.Contains("TEAM 3")) teamState = 3;
+                            else if (textline.Contains("TEAM 4")) teamState = 4;
+                            else if (textline.Contains("TEAM 5")) teamState = 5;
+                            else if (textline.Contains("TEAM 6")) teamState = 6;
+                            else if (textline.Contains("TEAM 7")) teamState = 7;
+                            else
+                            {   // Add the underscore character plus the team number to the Name of the player
+                                int stpt = textline.IndexOf("\t") + 1;
+
+                                if (teamState == 1 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_1\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_1\n";
+                                    }
+
+                                }
+                                else if (teamState == 2 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_2\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_2\n";
+                                    }
+                                }
+                                else if (teamState == 3 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_3\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_3\n";
+                                    }
+                                }
+                                else if (teamState == 4 && textline != "")
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_4\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_4\n";
+                                    }
+                                else if (teamState == 5 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_5\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_5\n";
+                                    }
+                                }
+                                else if (teamState == 6 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_6\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_6\n";
+                                    }
+                                }
+                                else if (teamState == 7 && textline != "")
+                                {
+                                    if (!textline.Contains("*"))
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - stpt) + "_7\n";
+                                    else
+                                    {
+                                        richTextBox3.Text += textline.Substring(stpt, textline.Length - (stpt + 1)) + "_7\n";
+                                    }
+                                }
+                            }
+                        } while (sr.Peek() != -1);
+                    }
+                }
+            }
 
             // READ the DBC File
             if (File.Exists(dbcFilePath))
@@ -190,7 +310,14 @@ namespace BlueTeeApp
                             // Strip off the Players Name
                             golferName = textline.Substring(0, endpt);
 
-                            // Separate the First and Last name
+                            // Look if the golfer played the previous round. If so Mark them with their team number
+                            foreach(var glfer in richTextBox3.Lines)
+                            {
+                                if (glfer.Contains(golferName) && ((glfer.Length - 2) == golferName.Length)) 
+                                    golferName = glfer;
+                            }
+
+                            // Separate the First name, Last name, Middle initial/JR designation
                             string[] names = golferName.Trim().Split(new char[] { ' ' }, 3);
 
                             // Shorten some common first names
@@ -227,13 +354,13 @@ namespace BlueTeeApp
                                 listBox7.Items.Add(firstLetter);
 
                             listBox5.Items.Add(hcpIndex);
-                            
+
                             //listBox1.DrawMode = DrawMode.OwnerDrawFixed;                            
                             //listBox1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.ListBox1_DrawItem);                            
                         }
                     } while (sr.Peek() != -1);
                 }
-                
+
                 // Make 5 dummy players to allow for guests. The user is prompted later to enter their actual names and HCP index
                 golferName = "Guest Player I";
                 golferName = golferName.ToUpper();
@@ -291,7 +418,7 @@ namespace BlueTeeApp
                         int endpt = textline.IndexOf("=");
 
                         // Strip off the course handicap Rating/Slope/Par value for 4 sets of tees Wht,Gld,Red,Grn
-                        if (textline.Contains("whiteRating"))                        
+                        if (textline.Contains("whiteRating"))
                             whtRating = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
                         else if (textline.Contains("whiteSlope"))
                             whtSlope = Convert.ToSingle(textline.Substring(endpt + 2, textline.Length - (endpt + 2)));
@@ -325,7 +452,7 @@ namespace BlueTeeApp
                 // The File is missing so create it from WCC default values
                 MessageBox.Show("Error: " + hcpFilePath + " FILE NOT FOUND\n" + "\nBy default WCC INFO will used.", "Check Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 string[] wccInfo = new string[13];
-                               
+
                 wccInfo[0] = "whiteRating = " + whtRating.ToString();
                 wccInfo[1] = "whiteSlope = " + whtSlope.ToString();
                 wccInfo[2] = "whitePar = " + whtPar.ToString();
@@ -912,13 +1039,39 @@ namespace BlueTeeApp
             // Function call to Sort the lines in the richTextBox1
             SortRTBlines();
 
-            makeABCDteams();            
+            makeABCDteams();
+        }
+
+        private void check4PriorTeammates(int teamNum, int lineCnt)
+        {
+            if (richTextBox1.Lines[lineCnt].Contains("_1")) { previousTeammatesArry[teamNum, 1]++; if (previousTeammatesArry[teamNum, 1] > 1) previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_2")) { previousTeammatesArry[teamNum, 2]++; if (previousTeammatesArry[teamNum, 2] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_3")) { previousTeammatesArry[teamNum, 3]++; if (previousTeammatesArry[teamNum, 3] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_4")) { previousTeammatesArry[teamNum, 4]++; if (previousTeammatesArry[teamNum, 4] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_5")) { previousTeammatesArry[teamNum, 5]++; if (previousTeammatesArry[teamNum, 5] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_6")) { previousTeammatesArry[teamNum, 6]++; if (previousTeammatesArry[teamNum, 6] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+            else if (richTextBox1.Lines[lineCnt].Contains("_6")) { previousTeammatesArry[teamNum, 7]++; if (previousTeammatesArry[teamNum, 7] > 1)  previousTeammatesLineNum[teamCnt, lineIndex++] = richTextBox2.Lines.Count(); }
+        }
+
+        private void swapPreviousTeammates(int numOfTeams)
+        {
+            int previousnum = 0;
+            int num = 0;
+
+            for (; numOfTeams > 0;)
+            {
+                for (int possibleTeam = 7; possibleTeam > 0; possibleTeam--)
+                {
+                    if (previousTeammatesArry[numOfTeams, possibleTeam] > 1)
+                        previousnum = num;
+                }
+                numOfTeams -= 1;
+            }
         }
 
         /// <summary>
         /// This method puts the teams together by writing the richTextBox2 with a particular line organization.
         /// This allows the second pass of balancing the WHT TEE and GOLD TEE players using a swap of lines.
-        /// 
         /// </summary>
         private void makeABCDteams ()
         {
@@ -930,37 +1083,58 @@ namespace BlueTeeApp
 
             //Initialize variables
             teamCnt = 0; teamHcp = 0;
-            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;            
+            team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;
+          
 
             switch (playerCnt - 1)
             {
                 case 6:
-                    teamCnt = 2;
+                    teamCnt = 1;
 
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";
                     richTextBox2.Text += richTextBox1.Lines[0];
                     if (richTextBox1.Lines[0].Contains("*")) team1g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 0);
+                    
                     richTextBox2.Text += Environment.NewLine;
+
                     richTextBox2.Text += richTextBox1.Lines[3];
                     if (richTextBox1.Lines[3].Contains("*")) team1g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 3);
                     richTextBox2.Text += Environment.NewLine;
+
                     richTextBox2.Text += richTextBox1.Lines[5];
                     if (richTextBox1.Lines[5].Contains("*")) team1g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 5);
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
+
+                    teamCnt++;
+                    lineIndex = 0;
 
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += "TEAM 2\n";
                     richTextBox2.Text += richTextBox1.Lines[1];
                     if (richTextBox1.Lines[1].Contains("*")) team2g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 1);
                     richTextBox2.Text += Environment.NewLine;
+
                     richTextBox2.Text += richTextBox1.Lines[2];
                     if (richTextBox1.Lines[2].Contains("*")) team2g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 2);
                     richTextBox2.Text += Environment.NewLine;
+
                     richTextBox2.Text += richTextBox1.Lines[4];
                     if (richTextBox1.Lines[4].Contains("*")) team2g++;
+                    // Check if there are any teammates that played together last round.
+                    check4PriorTeammates(teamCnt, 4);
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
@@ -972,6 +1146,10 @@ namespace BlueTeeApp
 
                         swapGoldForWhiteThreesome();
                     }
+
+                    // If so, then swap the player with a similar HCP from the other team.
+                    //swapPreviousTeammates(teamCnt);
+
                     //Use the +10 to force the program path dow a 3-Person team display
                     displayTeamHCPcalc(teamCnt + 10);
 
@@ -1008,7 +1186,6 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[4].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += "BLIND\n";                                             //11
-
                     goldGolfers[1] = team2g;
 
                     //Check the goldGolfer deficit between the MAX and MIN TEAMS
