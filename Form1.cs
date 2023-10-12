@@ -47,7 +47,7 @@ namespace BlueTeeApp
 
         private static Single whtRating = 70.6F, goldRating = 66.8F, redRating = 71.3F, whtSlope = 128, goldSlope = 121, redSlope = 119, whtPar = 72, goldPar = 72, redPar = 72, greenRating = 62.1F, greenSlope = 112, greenPar = 72;
         
-        static readonly string SWver = "SWver: 1_7_26";
+        static readonly string SWver = "SWver: 1_10_12";
 
         /// <summary>
         /// Revision History
@@ -65,6 +65,10 @@ namespace BlueTeeApp
         /// 7_06 Added saving a text file of the teams. This file is then used to compare team players from the previous round to the current round to prevent the same pairing on consecutive rounds.
         /// 7_10 Corrected the Team dsignation being duplicated for Tom Beck/ Tom Beck Jr. Added the date to the previous round pairings text file.
         /// 7_26 Corrected a problem when saving the previous pairings text file. I had a mistake when deleting the _N designation and * tee designation meta-characters.
+        /// 8_31 Corrected the ABCD pairing process when balancing WHTnGLD tee players between teams.
+        /// 9_21 Improved thee two-man Teams with 8 players.
+        /// 9_25 Added Blind twosomes for up to 15 players.
+        /// 10_11 Added Dollar Amount calculations. The entire table of Wolf Point Calculations are now updated on each player entry. This eleminates the depenency on entry order.
         /// 
         /// </summary>
         /// <param name="sender"></param>
@@ -329,14 +333,17 @@ namespace BlueTeeApp
                                 names[0] = names[0].Replace("RICHARD", "RICH");
                             else if (names[0].Contains("EDWARD"))
                                 names[0] = names[0].Replace("EDWARD", "ED");
+                            else if (names[0].Contains("TIMOTHY"))
+                                names[0] = names[0].Replace("TIMOTHY", "TIM");
 
                             // Look for middle initials and SR designation in the 2nd string to put it at the end.
                             if (names.Length == 3)
                             {
                                 if (names[1].Length == 1 || names[1].Contains(".") || names[1].Contains("SR"))
                                     golferName = names[2] + " " + names[0] + " " + names[1];
-                                else if (names[2].Length <= 3 && names[2].Length > 0)
+                                else if (names[2].Contains("_") || (names[2].Length <= 3 && names[2].Length > 0))
                                     golferName = names[1] + " " + names[0] + " " + names[2];
+
                             }
                             else
                                 golferName = names[1] + " " + names[0];
@@ -1084,7 +1091,12 @@ namespace BlueTeeApp
             //Initialize variables
             teamCnt = 0; teamHcp = 0;
             team1g = 0; team2g = 0; team3g = 0; team4g = 0; team5g = 0; team6g = 0; team7g = 0;
-          
+            
+            // Refresh the gold golfers Array with updated values now that the players have been swapped once
+            goldGolfers[0] = team1g; goldGolfers[1] = team2g; goldGolfers[2] = team3g;
+            goldGolfers[3] = team4g; goldGolfers[4] = team5g; goldGolfers[5] = team6g;
+            goldGolfers[6] = team7g;
+
 
             switch (playerCnt - 1)
             {
@@ -1138,18 +1150,15 @@ namespace BlueTeeApp
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
-                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteThreesome();
                     }
-
-                    // If so, then swap the player with a similar HCP from the other team.
-                    //swapPreviousTeammates(teamCnt);
-
                     //Use the +10 to force the program path dow a 3-Person team display
                     displayTeamHCPcalc(teamCnt + 10);
 
@@ -1188,17 +1197,17 @@ namespace BlueTeeApp
                     richTextBox2.Text += "BLIND\n";                                             //11
                     goldGolfers[1] = team2g;
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
                     blindString = richTextBox2.Lines[4] + "(F) " +                      //rtb Line11
-                            richTextBox2.Lines[5].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[5].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 11, blindString);
 
@@ -1240,10 +1249,10 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[6].Contains("*")) team2g++;
                     goldGolfers[1] = team2g;
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 ) && (goldGolfers[0] == 2 || goldGolfers[1] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 ) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 ) && (goldGolfers[0] == 0 || goldGolfers[1] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1296,10 +1305,10 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[8].Contains("*")) team3g++;
                     goldGolfers[2] = team3g;
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1358,15 +1367,15 @@ namespace BlueTeeApp
                     goldGolfers[2] = team3g;
 
                     blindString = richTextBox2.Lines[16] + "(F) " +
-                        richTextBox2.Lines[17].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox2.Lines[17].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 11, blindString);
                     changeLine(richTextBox2, 5, blindString);
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1427,17 +1436,17 @@ namespace BlueTeeApp
                     richTextBox2.Text += "BLIND\n";                                         //17
                     goldGolfers[2] = team3g;
 
-                    //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
+                    // If there are multiple teams that have 3 Gold and One White run the swap again
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
                     blindString = richTextBox2.Lines[5] + "(F) " +
-                            richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 17, blindString);
                                         
@@ -1502,11 +1511,12 @@ namespace BlueTeeApp
                         richTextBox2.Text += richTextBox1.Lines[11];                            //19
                         if (richTextBox1.Lines[11].Contains("*")) team4g++;
                         richTextBox2.Text += Environment.NewLine;
-                        goldGolfers[3] = team4g;                        
+                        goldGolfers[3] = team4g;
 
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
+                        // If there are multiple teams that have 3 Gold and One White run the swap again
+                        while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                            || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0)))
                         {
                             determineTeamsToSwap(teamCnt);
 
@@ -1568,12 +1578,12 @@ namespace BlueTeeApp
                         if (richTextBox1.Lines[9].Contains("*")) team3g++;
                         goldGolfers[2] = team3g;
 
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
+                        // If there are multiple teams that have 3 Gold and One White run the swap again
+                        while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                            || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0)))
                         {
                             determineTeamsToSwap(teamCnt);
-
 
                             swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                         }
@@ -1643,11 +1653,11 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[12].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;                                                    //24
-                    
+
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1655,7 +1665,7 @@ namespace BlueTeeApp
                     }
 
                     blindString = richTextBox2.Lines[22] + "(F) " +
-                        richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     changeLine(richTextBox2, 5, blindString);
                     changeLine(richTextBox2, 11, blindString);
                     changeLine(richTextBox2, 17, blindString);
@@ -1729,9 +1739,9 @@ namespace BlueTeeApp
                     goldGolfers[3] = team4g;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1739,7 +1749,7 @@ namespace BlueTeeApp
                     }
 
                     blindString = richTextBox2.Lines[17] + "(F) " +
-                            richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 5, blindString);
                     changeLine(richTextBox2, 11, blindString);
@@ -1817,9 +1827,9 @@ namespace BlueTeeApp
                     teamCnt = 5;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
                         swapGoldForWhiteThreesome();
@@ -1895,12 +1905,12 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[12];
                     if (richTextBox1.Lines[12].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[3] = team4g;                    
+                    goldGolfers[3] = team4g;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -1990,11 +2000,11 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[15];                        //30
                     if (richTextBox1.Lines[15].Contains("*")) team5g++;
                     goldGolfers[4] = team5g;
-                    
+
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -2003,7 +2013,7 @@ namespace BlueTeeApp
 
                     //Make the BLIND after the teams are balanced for GOLD/WHITE
                     blindString = richTextBox2.Lines[23] + "(F) " +
-                            richTextBox2.Lines[24].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[24].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 5, blindString);
                     changeLine(richTextBox2, 11, blindString);
@@ -2096,9 +2106,9 @@ namespace BlueTeeApp
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
@@ -2112,68 +2122,68 @@ namespace BlueTeeApp
 
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
-                    richTextBox2.Text += richTextBox1.Lines[4];                             //2
-                    if (richTextBox1.Lines[4].Contains("*")) team1g++;
+                    richTextBox2.Text += richTextBox1.Lines[1];                             //8
+                    if (richTextBox1.Lines[1].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[5];                             //3
-                    if (richTextBox1.Lines[5].Contains("*")) team1g++;
+                    richTextBox2.Text += richTextBox1.Lines[8];                             //9
+                    if (richTextBox1.Lines[8].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[14];                            //4
-                    if (richTextBox1.Lines[14].Contains("*")) team1g++;
+                    richTextBox2.Text += richTextBox1.Lines[11];                            //10
+                    if (richTextBox1.Lines[11].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[15];                            //5
-                    if (richTextBox1.Lines[15].Contains("*")) team1g++;
+                    richTextBox2.Text += richTextBox1.Lines[18];                            //11 
+                    if (richTextBox1.Lines[18].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
 
                     richTextBox2.Text += Environment.NewLine;                               //6
 
                     richTextBox2.Text += "TEAM 2\n";                                        //7
-                    richTextBox2.Text += richTextBox1.Lines[1];                             //8
-                    if (richTextBox1.Lines[1].Contains("*")) team2g++;
+                    richTextBox2.Text += richTextBox1.Lines[2];                             //14
+                    if (richTextBox1.Lines[2].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[8];                             //9
-                    if (richTextBox1.Lines[8].Contains("*")) team2g++;
+                    richTextBox2.Text += richTextBox1.Lines[7];                             //15
+                    if (richTextBox1.Lines[7].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[11];                            //10
-                    if (richTextBox1.Lines[11].Contains("*")) team2g++;
+                    richTextBox2.Text += richTextBox1.Lines[12];                            //16
+                    if (richTextBox1.Lines[12].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[18];                            //11 
-                    if (richTextBox1.Lines[18].Contains("*")) team2g++;
+                    richTextBox2.Text += richTextBox1.Lines[17];                            //17 
+                    if (richTextBox1.Lines[17].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
                     richTextBox2.Text += Environment.NewLine;                               //12
 
                     richTextBox2.Text += "TEAM 3\n";                                        //13
-                    richTextBox2.Text += richTextBox1.Lines[2];                             //14
-                    if (richTextBox1.Lines[2].Contains("*")) team3g++;
+                    richTextBox2.Text += richTextBox1.Lines[3];                             //20
+                    if (richTextBox1.Lines[3].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[7];                             //15
-                    if (richTextBox1.Lines[7].Contains("*")) team3g++;
+                    richTextBox2.Text += richTextBox1.Lines[6];                             //21
+                    if (richTextBox1.Lines[6].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[12];                            //16
-                    if (richTextBox1.Lines[12].Contains("*")) team3g++;
+                    richTextBox2.Text += richTextBox1.Lines[13];                            //22
+                    if (richTextBox1.Lines[13].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[17];                            //17 
-                    if (richTextBox1.Lines[17].Contains("*")) team3g++;
+                    richTextBox2.Text += richTextBox1.Lines[16];                            //23
+                    if (richTextBox1.Lines[16].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
 
                     richTextBox2.Text += Environment.NewLine;                               //18
 
                     richTextBox2.Text += "TEAM 4\n";                                        //19
-                    richTextBox2.Text += richTextBox1.Lines[3];                             //20
-                    if (richTextBox1.Lines[3].Contains("*")) team4g++;
+                    richTextBox2.Text += richTextBox1.Lines[4];                             //2
+                    if (richTextBox1.Lines[4].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[6];                             //21
-                    if (richTextBox1.Lines[6].Contains("*")) team4g++;
+                    richTextBox2.Text += richTextBox1.Lines[5];                             //3
+                    if (richTextBox1.Lines[5].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[13];                            //22
-                    if (richTextBox1.Lines[13].Contains("*")) team4g++;
+                    richTextBox2.Text += richTextBox1.Lines[14];                            //4
+                    if (richTextBox1.Lines[14].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[16];                            //23
-                    if (richTextBox1.Lines[16].Contains("*")) team4g++;
+                    richTextBox2.Text += richTextBox1.Lines[15];                            //5
+                    if (richTextBox1.Lines[15].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[3] = team4g;
 
@@ -2198,25 +2208,23 @@ namespace BlueTeeApp
 
                     //Make the BLIND before the teams are balanced for GOLD/WHITEE                    
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
-                    //Change the BLIND LINE and Correct for GOLD player if necessary                    
+                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
+                    //Change the BLIND LINE and Correct for GOLD player if necessary
+                    
                     if (richTextBox2.Lines[29].Contains("*")) team5g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[4] = team5g;                    
-
+                    goldGolfers[4] = team5g;
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
+                    while (((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                        || ((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
 
-
                     displayTeamHCPcalc(teamCnt);
-
                     break;
                 case 20:
                     richTextBox2.Text += "A-B-C-D DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
@@ -2305,8 +2313,8 @@ namespace BlueTeeApp
                     teamCnt = 5;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -2415,8 +2423,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
 
@@ -2536,7 +2544,7 @@ namespace BlueTeeApp
 
                     //Make the BLIND before the teams are balanced for GOLD/WHITE
                     blindString = richTextBox1.Lines[rIntF] + "(F) " +
-                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     //Change the BLIND LINE and Correct for GOLD player if necessary
                     changeLine(richTextBox2, 5, blindString);
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
@@ -2544,8 +2552,8 @@ namespace BlueTeeApp
                     if (richTextBox2.Lines[11].Contains("*")) team2g++;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -2659,15 +2667,15 @@ namespace BlueTeeApp
                     } while (rIntF == rIntB);                                   //35
 
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[35].Contains("*")) team6g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[5] = team6g;
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -2780,8 +2788,8 @@ namespace BlueTeeApp
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -2809,7 +2817,7 @@ namespace BlueTeeApp
                     } while (rIntF == rIntB);
 
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
@@ -2827,7 +2835,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[11].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
@@ -2845,7 +2853,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[16].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[17].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
@@ -2920,8 +2928,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -2949,7 +2957,7 @@ namespace BlueTeeApp
                         rIntB = rnd.Next(16, 26);
                     } while (rIntF == rIntB);
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
@@ -2967,7 +2975,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[15].Contains("*")) team2g++;         //10
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
@@ -3058,8 +3066,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -3189,15 +3197,15 @@ namespace BlueTeeApp
                         rIntB = rnd.Next(21, 27);
                     } while (rIntF == rIntB);
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[richTextBox2.Lines.Length - 1].Contains("*")) team7g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[6] = team7g;
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
 
@@ -3328,8 +3336,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -3470,7 +3478,8 @@ namespace BlueTeeApp
 
             for (int cntr = 0; cntr < (playerCnt - 1); cntr++)
             {
-                richTextBox1.Text += listBox4.Items[cntr] + " " + listBox2.Items[cntr] + "\r\n";
+                richTextBox1.Text += listBox4.Items[cntr] + "\t" + listBox2.Items[cntr] + "\r\n";
+                //richTextBox1.Text += listBox4.Items[cntr] + " " + listBox2.Items[cntr] + "\r\n";
                 // Initialize the gold Tee Golfers Array to zero. This holds the number of players per team playing from the golds.
                 if (cntr < 7) goldGolfers[cntr] = 0;
             }
@@ -3535,7 +3544,7 @@ namespace BlueTeeApp
                         teamCnt = 2;
 
                         //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
                             || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -3543,17 +3552,18 @@ namespace BlueTeeApp
                             swapGoldForWhiteThreesome();
                         }
                         //FOR 3-Player Teams use 17-11; FOR 4-Player Teams use 7-1
+                        //
                         displayTeamHCPcalc(teamCnt + 10);
                     }
                     else
                     {
                         // TWO MAN TEAMS
-                        richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
+                        richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";         //0
                         richTextBox2.Text += "TEAM 1\n";                                //1
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];               //2
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //2
                         if (richTextBox1.Lines[nums[0]].Contains("*")) team1g++;
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];               //3
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //3
                         if (richTextBox1.Lines[nums[1]].Contains("*")) team1g++;
                         richTextBox2.Text += Environment.NewLine;
 
@@ -3561,10 +3571,10 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;                       //5
 
                         richTextBox2.Text += "TEAM 2\n";                                //6
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];               //7
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //7
                         if (richTextBox1.Lines[nums[2]].Contains("*")) team2g++;
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];               //8
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //8
                         if (richTextBox1.Lines[nums[3]].Contains("*")) team2g++;
                         richTextBox2.Text += Environment.NewLine;
 
@@ -3572,10 +3582,10 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;                       //10
 
                         richTextBox2.Text += "TEAM 3\n";                                //11
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];               //12
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //12
                         if (richTextBox1.Lines[nums[4]].Contains("*")) team3g++;
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];               //13
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //13
                         if (richTextBox1.Lines[nums[5]].Contains("*")) team3g++;
                         richTextBox2.Text += Environment.NewLine;                        
 
@@ -3602,34 +3612,34 @@ namespace BlueTeeApp
                     // TWO MAN TEAMS
                     richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                     richTextBox2.Text += "TEAM 1\n";                                //1
-                    richTextBox2.Text += richTextBox1.Lines[nums[0]];               //2
+                    richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //2
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[1]];               //3
+                    richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //3
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += Environment.NewLine;                       //4
                     richTextBox2.Text += Environment.NewLine;                       //5
 
                     richTextBox2.Text += "TEAM 2\n";                                //6
-                    richTextBox2.Text += richTextBox1.Lines[nums[2]];               //7
+                    richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //7
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[3]];               //8
+                    richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //8
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += Environment.NewLine;                       //9
                     richTextBox2.Text += Environment.NewLine;                       //10
 
                     richTextBox2.Text += "TEAM 3\n";                                //11
-                    richTextBox2.Text += richTextBox1.Lines[nums[4]];               //12
+                    richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //12
                     richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[5]];               //13
+                    richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //13
                     richTextBox2.Text += Environment.NewLine;
 
                     richTextBox2.Text += Environment.NewLine;                       //14
                     richTextBox2.Text += Environment.NewLine;                       //15
 
                     richTextBox2.Text += "TEAM 4\n";                                //16
-                    richTextBox2.Text += richTextBox1.Lines[nums[6]];               //17
+                    richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');               //17
                     richTextBox2.Text += Environment.NewLine;
 
                     //Two man Teams and an ODD number of Players. There isn't a Draw, Kick Out Low man
@@ -3649,7 +3659,7 @@ namespace BlueTeeApp
                         nums[i] = temp;
                     }
 
-                    if (MessageBox.Show("Do you want to play as Two 4-Man teams?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (MessageBox.Show("Do you want to play as 4-Man teams?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         teamCnt = 2;
 
@@ -3686,8 +3696,8 @@ namespace BlueTeeApp
                         goldGolfers[1] = team2g;
 
                         //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -3699,31 +3709,31 @@ namespace BlueTeeApp
                     else
                     {
                         // Now your array is randomized and you can simply print them in order
-                        AutoClosingMessageBox.Show("Four 2-Man Teams have been selected randomly.", "Information", 2500);
+                        AutoClosingMessageBox.Show("Four 2-Man Teams have been selected randomly.", "Information", 2000);
                         // TWO MAN TEAMS FOR 8 PLAYERS
                         richTextBox2.Text = "Match Teams for RANDOM TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
 
                         richTextBox2.Text += Environment.NewLine;
 
@@ -3731,10 +3741,12 @@ namespace BlueTeeApp
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
 
+                        twoManTeamsToolStripMenuItem.Visible = true;
+                        twoManTeamsToolStripMenuItem_Click(null, null); 
                         hideLowManOutBtn = true;
                     }
 
@@ -3795,8 +3807,8 @@ namespace BlueTeeApp
                         teamCnt = 3;
 
                         //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -3824,43 +3836,43 @@ namespace BlueTeeApp
                         AutoClosingMessageBox.Show("Four 2-Man Teams have been selected randomly.\nThe golfer with the lowest points will be the odd-man-out.", "Information", 2500);
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         twoManTeamsToolStripMenuItem.Visible = true;
@@ -3886,45 +3898,45 @@ namespace BlueTeeApp
                     {                        
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[9]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
 
 
                         twoManTeamsToolStripMenuItem.Visible = true;
@@ -3983,14 +3995,14 @@ namespace BlueTeeApp
                         goldGolfers[2] = team3g;
 
                         blindString = richTextBox2.Lines[16] + "(F) " +
-                            richTextBox2.Lines[17].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[17].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                         changeLine(richTextBox2, 11, blindString);
                         changeLine(richTextBox2, 5, blindString);
 
                         //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4018,52 +4030,52 @@ namespace BlueTeeApp
                         // Now your array is randomized and you can simply print them in order
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[9]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 6\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[10]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         //Two man Teams and an ODD number of Players. There isn't a Draw, Kick Out Low man
@@ -4139,8 +4151,8 @@ namespace BlueTeeApp
                         goldGolfers[2] = team3g;
 
                         //Check the goldGolfer deficit between the MAX and MIN TEAMS
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4148,7 +4160,7 @@ namespace BlueTeeApp
                             swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                         }
                         blindString = richTextBox2.Lines[5] + "(F) " +
-                                richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                                richTextBox2.Lines[11].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                         changeLine(richTextBox2, 17, blindString);
                         
@@ -4227,8 +4239,8 @@ namespace BlueTeeApp
                         goldGolfers[3] = team4g;
                         teamCnt = 4;
 
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4289,8 +4301,8 @@ namespace BlueTeeApp
                         if (richTextBox1.Lines[nums[9]].Contains("*")) team3g++;
                         goldGolfers[2] = team3g;
 
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4305,54 +4317,54 @@ namespace BlueTeeApp
                         AutoClosingMessageBox.Show("TWOSOMES using a Random Draw.", "APP INFO", 2500);
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[9]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 6\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[10]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[11]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[11]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
@@ -4440,8 +4452,8 @@ namespace BlueTeeApp
                         teamCnt = 4;
 
                         // If there are multiple teams that have 3 Gold and One White run the swap again
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4450,7 +4462,7 @@ namespace BlueTeeApp
                         }
 
                         blindString = richTextBox2.Lines[22] + "(F) " +
-                            richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                         changeLine(richTextBox2, 5, blindString);
                         changeLine(richTextBox2, 11, blindString);
                         changeLine(richTextBox2, 17, blindString);
@@ -4463,61 +4475,61 @@ namespace BlueTeeApp
 
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[9]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 6\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[10]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[11]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[11]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 7\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[12]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[12]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         twoManTeamsToolStripMenuItem.Visible = true;
@@ -4606,8 +4618,8 @@ namespace BlueTeeApp
                         teamCnt = 4;
 
                         // If there are multiple teams that have 3 Gold and One White run the swap again
-                        while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                            || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
                             || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
                         {
                             determineTeamsToSwap(teamCnt);
@@ -4616,7 +4628,7 @@ namespace BlueTeeApp
                         }
 
                         blindString = richTextBox2.Lines[17] + "(F) " +
-                                richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                                richTextBox2.Lines[23].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                         changeLine(richTextBox2, 5, blindString);
                         changeLine(richTextBox2, 11, blindString);
@@ -4629,63 +4641,63 @@ namespace BlueTeeApp
 
                         richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
                         richTextBox2.Text += "TEAM 1\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[0]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[9]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 2\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[1]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[8]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 3\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[2]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[7]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 4\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[3]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[6]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 5\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[4]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[5]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 6\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[10]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[11]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[11]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += Environment.NewLine;
                         richTextBox2.Text += Environment.NewLine;
 
                         richTextBox2.Text += "TEAM 7\n";
-                        richTextBox2.Text += richTextBox1.Lines[nums[12]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[12]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
                         richTextBox2.Text += Environment.NewLine;
-                        richTextBox2.Text += richTextBox1.Lines[nums[13]];
+                        richTextBox2.Text += richTextBox1.Lines[nums[13]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
 
                         twoManTeamsToolStripMenuItem.Visible = true;
                         twoManTeamsToolStripMenuItem_Click(null, null);
@@ -4705,84 +4717,163 @@ namespace BlueTeeApp
                         nums[i] = temp;
                     }
                     // Now your array is randomized and you can simply print them in order
-                    richTextBox2.Text = "RANDOM DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
-                    richTextBox2.Text += "TEAM 1\n";                            //1
-                    richTextBox2.Text += richTextBox1.Lines[nums[0]];                 //2
-                    if (richTextBox1.Lines[nums[0]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[9]];                 //3
-                    if (richTextBox1.Lines[nums[9]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[10]];                //4
-                    if (richTextBox1.Lines[nums[10]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[0] = team1g;
 
-                    richTextBox2.Text += Environment.NewLine;                   //5
-
-                    richTextBox2.Text += "TEAM 2\n";                            //6 
-                    richTextBox2.Text += richTextBox1.Lines[nums[1]];                 //7
-                    if (richTextBox1.Lines[nums[1]].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[8]];                 //8
-                    if (richTextBox1.Lines[nums[8]].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[11]];                //9
-                    if (richTextBox1.Lines[nums[11]].Contains("*")) team2g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[1] = team2g;
-
-                    richTextBox2.Text += Environment.NewLine;                   //10
-
-                    richTextBox2.Text += "TEAM 3\n";                            //11 
-                    richTextBox2.Text += richTextBox1.Lines[nums[2]];                 //12 
-                    if (richTextBox1.Lines[nums[2]].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[7]];                 //13 
-                    if (richTextBox1.Lines[nums[7]].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[12]];                //14
-                    if (richTextBox1.Lines[nums[12]].Contains("*")) team3g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[2] = team3g;
-
-                    richTextBox2.Text += Environment.NewLine;                   //15 
-
-                    richTextBox2.Text += "TEAM 4\n";                            //16 
-                    richTextBox2.Text += richTextBox1.Lines[nums[3]];                 //17 
-                    if (richTextBox1.Lines[nums[3]].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[6]];                 //18
-                    if (richTextBox1.Lines[nums[6]].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[13]];                //19
-                    if (richTextBox1.Lines[nums[13]].Contains("*")) team4g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[3] = team4g;
-
-                    richTextBox2.Text += Environment.NewLine;                   //20
-
-                    richTextBox2.Text += "TEAM 5\n";                            //21
-                    richTextBox2.Text += richTextBox1.Lines[nums[4]];                 //22
-                    if (richTextBox1.Lines[nums[4]].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[5]];                 //23
-                    if (richTextBox1.Lines[nums[5]].Contains("*")) team5g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[14]];                //24
-                    if (richTextBox1.Lines[nums[14]].Contains("*")) team5g++;
-                    goldGolfers[4] = team5g;
-                    teamCnt = 5;
-
-                    // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
-                        || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
+                    if (MessageBox.Show("Do you want to play as Threesomes with a blind draw?", "Check Information", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        determineTeamsToSwap(teamCnt);
-                        swapGoldForWhiteThreesome();
+                        richTextBox2.Text = "RANDOM DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
+                        richTextBox2.Text += "TEAM 1\n";                            //1
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]];                 //2
+                        if (richTextBox1.Lines[nums[0]].Contains("*")) team1g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]];                 //3
+                        if (richTextBox1.Lines[nums[9]].Contains("*")) team1g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]];                //4
+                        if (richTextBox1.Lines[nums[10]].Contains("*")) team1g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[0] = team1g;
+
+                        richTextBox2.Text += Environment.NewLine;                   //5
+
+                        richTextBox2.Text += "TEAM 2\n";                            //6 
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]];                 //7
+                        if (richTextBox1.Lines[nums[1]].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]];                 //8
+                        if (richTextBox1.Lines[nums[8]].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[11]];                //9
+                        if (richTextBox1.Lines[nums[11]].Contains("*")) team2g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[1] = team2g;
+
+                        richTextBox2.Text += Environment.NewLine;                   //10
+
+                        richTextBox2.Text += "TEAM 3\n";                            //11 
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]];                 //12 
+                        if (richTextBox1.Lines[nums[2]].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]];                 //13 
+                        if (richTextBox1.Lines[nums[7]].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[12]];                //14
+                        if (richTextBox1.Lines[nums[12]].Contains("*")) team3g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[2] = team3g;
+
+                        richTextBox2.Text += Environment.NewLine;                   //15 
+
+                        richTextBox2.Text += "TEAM 4\n";                            //16 
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]];                 //17 
+                        if (richTextBox1.Lines[nums[3]].Contains("*")) team4g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]];                 //18
+                        if (richTextBox1.Lines[nums[6]].Contains("*")) team4g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[13]];                //19
+                        if (richTextBox1.Lines[nums[13]].Contains("*")) team4g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        goldGolfers[3] = team4g;
+
+                        richTextBox2.Text += Environment.NewLine;                   //20
+
+                        richTextBox2.Text += "TEAM 5\n";                            //21
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]];                 //22
+                        if (richTextBox1.Lines[nums[4]].Contains("*")) team5g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]];                 //23
+                        if (richTextBox1.Lines[nums[5]].Contains("*")) team5g++;
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[14]];                //24
+                        if (richTextBox1.Lines[nums[14]].Contains("*")) team5g++;
+                        goldGolfers[4] = team5g;
+                        teamCnt = 5;
+
+                        // If there are multiple teams that have 3 Gold and One White run the swap again
+                        while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
+                            || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                            || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
+                        {
+                            determineTeamsToSwap(teamCnt);
+                            swapGoldForWhiteThreesome();
+                        }
+
+                        displayTeamHCPcalc((teamCnt + 10));
                     }
-                    displayTeamHCPcalc((teamCnt + 10));
+                    else
+                    {
+                        MessageBox.Show("Two Man Teams will be selected.", "Information", MessageBoxButtons.OK);
+
+                        richTextBox2.Text = "Match Teams for BLIND TWOSOMES\n";                            //0
+                        richTextBox2.Text += "TEAM 1\n";
+                        
+                        richTextBox2.Text += richTextBox1.Lines[nums[0]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[9]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 2\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[1]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[8]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 3\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[2]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[7]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 4\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[3]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[6]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 5\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[4]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[5]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 6\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[10]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[11]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += "TEAM 7\n";
+                        richTextBox2.Text += richTextBox1.Lines[nums[12]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += richTextBox1.Lines[nums[13]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+                        richTextBox2.Text += Environment.NewLine;
+
+                        richTextBox2.Text += Environment.NewLine;
+                        richTextBox2.Text += Environment.NewLine;
+                        
+                        richTextBox2.Text += richTextBox1.Lines[nums[14]].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t', '-', '_');
+
+                        twoManTeamsToolStripMenuItem.Visible = true;
+                        twoManTeamsToolStripMenuItem_Click(null, null);
+                    }
                     break;
                 case 16:
                     nums = Enumerable.Range(0, 16).ToArray();
@@ -4866,8 +4957,8 @@ namespace BlueTeeApp
                     teamCnt = 4;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -4971,8 +5062,8 @@ namespace BlueTeeApp
                     teamCnt = 5;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -4982,7 +5073,7 @@ namespace BlueTeeApp
 
                     //Make the BLIND after the teams are balanced for GOLD/WHITE
                     blindString = richTextBox2.Lines[23] + "(F) " +
-                            richTextBox2.Lines[24].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox2.Lines[24].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
 
                     changeLine(richTextBox2, 5, blindString);
                     changeLine(richTextBox2, 11, blindString);
@@ -5087,8 +5178,8 @@ namespace BlueTeeApp
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -5112,23 +5203,6 @@ namespace BlueTeeApp
                     // Now your array is randomized and you can simply print them in order
                     richTextBox2.Text = "RANDOM DRAW for " + (playerCnt - 1).ToString() + " golfers\n";
                     richTextBox2.Text += "TEAM 1\n";                                        //1
-                    richTextBox2.Text += richTextBox1.Lines[nums[4]];                             //2
-                    if (richTextBox1.Lines[nums[4]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[5]];                             //3
-                    if (richTextBox1.Lines[nums[5]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[14]];                            //4
-                    if (richTextBox1.Lines[nums[14]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    richTextBox2.Text += richTextBox1.Lines[nums[15]];                            //5
-                    if (richTextBox1.Lines[nums[15]].Contains("*")) team1g++;
-                    richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[0] = team1g;
-
-                    richTextBox2.Text += Environment.NewLine;                               //6
-
-                    richTextBox2.Text += "TEAM 2\n";                                        //7
                     richTextBox2.Text += richTextBox1.Lines[nums[1]];                             //8
                     if (richTextBox1.Lines[nums[1]].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -5141,11 +5215,11 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[nums[18]];                            //11 
                     if (richTextBox1.Lines[nums[18]].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[1] = team2g;
+                    goldGolfers[0] = team1g;
 
-                    richTextBox2.Text += Environment.NewLine;                               //12
+                    richTextBox2.Text += Environment.NewLine;                               //6
 
-                    richTextBox2.Text += "TEAM 3\n";                                        //13
+                    richTextBox2.Text += "TEAM 2\n";                                        //7
                     richTextBox2.Text += richTextBox1.Lines[nums[2]];                             //14
                     if (richTextBox1.Lines[nums[2]].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -5158,11 +5232,11 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[nums[17]];                            //17 
                     if (richTextBox1.Lines[nums[17]].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
-                    goldGolfers[2] = team3g;
+                    goldGolfers[1] = team2g;
 
-                    richTextBox2.Text += Environment.NewLine;                               //18
+                    richTextBox2.Text += Environment.NewLine;                               //12
 
-                    richTextBox2.Text += "TEAM 4\n";                                        //19
+                    richTextBox2.Text += "TEAM 3\n";                                        //13
                     richTextBox2.Text += richTextBox1.Lines[nums[3]];                             //20
                     if (richTextBox1.Lines[nums[3]].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
@@ -5175,6 +5249,23 @@ namespace BlueTeeApp
                     richTextBox2.Text += richTextBox1.Lines[nums[16]];                            //23
                     if (richTextBox1.Lines[nums[16]].Contains("*")) team4g++;
                     richTextBox2.Text += Environment.NewLine;
+                    goldGolfers[2] = team3g;
+
+                    richTextBox2.Text += Environment.NewLine;                               //18
+
+                    richTextBox2.Text += "TEAM 4\n";                                        //19
+                    richTextBox2.Text += richTextBox1.Lines[nums[4]];                             //2
+                    if (richTextBox1.Lines[nums[4]].Contains("*")) team1g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    richTextBox2.Text += richTextBox1.Lines[nums[5]];                             //3
+                    if (richTextBox1.Lines[nums[5]].Contains("*")) team1g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    richTextBox2.Text += richTextBox1.Lines[nums[14]];                            //4
+                    if (richTextBox1.Lines[nums[14]].Contains("*")) team1g++;
+                    richTextBox2.Text += Environment.NewLine;
+                    richTextBox2.Text += richTextBox1.Lines[nums[15]];                            //5
+                    if (richTextBox1.Lines[nums[15]].Contains("*")) team1g++;
+                    richTextBox2.Text += Environment.NewLine;                    
                     goldGolfers[3] = team4g;
 
                     richTextBox2.Text += Environment.NewLine;                               //24
@@ -5198,22 +5289,23 @@ namespace BlueTeeApp
 
                     //Make the BLIND before the teams are balanced for GOLD/WHITEE                    
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     //Change the BLIND LINE and Correct for GOLD player if necessary                    
                     if (richTextBox2.Lines[29].Contains("*")) team5g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[4] = team5g;
-                    teamCnt = 5;
-
+                    
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+
+                    teamCnt = 5;
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 20:
@@ -5315,8 +5407,8 @@ namespace BlueTeeApp
                     teamCnt = 5;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -5437,8 +5529,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
 
@@ -5569,7 +5661,7 @@ namespace BlueTeeApp
 
                     //Make the BLIND before the teams are balanced for GOLD/WHITE
                     blindString = richTextBox1.Lines[rIntF] + "(F) " +
-                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                            richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     //Change the BLIND LINE and Correct for GOLD player if necessary
                     changeLine(richTextBox2, 5, blindString);
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
@@ -5577,14 +5669,15 @@ namespace BlueTeeApp
                     if (richTextBox2.Lines[11].Contains("*")) team2g++;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+                    
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 23:
@@ -5704,21 +5797,22 @@ namespace BlueTeeApp
                     } while (rIntF == rIntB);                                   //35
 
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[35].Contains("*")) team6g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[5] = team6g;
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+                    
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 24:
@@ -5837,14 +5931,15 @@ namespace BlueTeeApp
                     teamCnt = 6;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+                    
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 25:
@@ -5878,7 +5973,7 @@ namespace BlueTeeApp
                     } while (rIntF == rIntB);
 
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
@@ -5896,7 +5991,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[nums[15]].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[nums[11]].Contains("*")) team2g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
@@ -5914,7 +6009,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[nums[16]].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[nums[17]].Contains("*")) team3g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[2] = team3g;
@@ -5989,8 +6084,8 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
@@ -6030,7 +6125,7 @@ namespace BlueTeeApp
                         rIntB = rnd.Next(16, 26);
                     } while (rIntF == rIntB);
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[5].Contains("*")) team1g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[0] = team1g;
@@ -6048,7 +6143,7 @@ namespace BlueTeeApp
                     if (richTextBox1.Lines[nums[15]].Contains("*")) team2g++;         //10
                     richTextBox2.Text += Environment.NewLine;
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[1] = team2g;
 
@@ -6139,14 +6234,15 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+                    
                     displayTeamHCPcalc(teamCnt);
                     break;
                 case 27:
@@ -6282,15 +6378,15 @@ namespace BlueTeeApp
                         rIntB = rnd.Next(21, 27);
                     } while (rIntF == rIntB);
                     richTextBox2.Text += richTextBox1.Lines[rIntF] + "(F) " +
-                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ') + "(B)";
+                        richTextBox1.Lines[rIntB].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '\t') + "(B)";
                     if (richTextBox2.Lines[richTextBox2.Lines.Length - 1].Contains("*")) team7g++;
                     richTextBox2.Text += Environment.NewLine;
                     goldGolfers[6] = team7g;
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
 
@@ -6433,14 +6529,15 @@ namespace BlueTeeApp
                     teamCnt = 7;
 
                     // If there are multiple teams that have 3 Gold and One White run the swap again
-                    while (((goldGolfers[0] >= 2 || goldGolfers[1] >= 2 || goldGolfers[2] >= 2 || goldGolfers[3] >= 2 || goldGolfers[4] >= 2 || goldGolfers[5] >= 2 || goldGolfers[6] >= 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
-                        || ((goldGolfers[0] >= 3 || goldGolfers[1] >= 3 || goldGolfers[2] >= 3 || goldGolfers[3] >= 3 || goldGolfers[4] >= 3 || goldGolfers[5] >= 3 || goldGolfers[6] >= 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
+                    while (((goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2) && (goldGolfers[0] == 0 || goldGolfers[1] == 0 || goldGolfers[2] == 0 || goldGolfers[3] == 0 || goldGolfers[4] == 0 || goldGolfers[5] == 0 || goldGolfers[6] == 0))
+                        || ((goldGolfers[0] == 3 || goldGolfers[1] == 3 || goldGolfers[2] == 3 || goldGolfers[3] == 3 || goldGolfers[4] == 3 || goldGolfers[5] == 3 || goldGolfers[6] == 3) && (goldGolfers[0] == 1 || goldGolfers[1] == 1 || goldGolfers[2] == 1 || goldGolfers[3] == 1 || goldGolfers[4] == 1 || goldGolfers[5] == 1 || goldGolfers[6] == 1))
                         || ((goldGolfers[0] == 4 || goldGolfers[1] == 4 || goldGolfers[2] == 4 || goldGolfers[3] == 4 || goldGolfers[4] == 4 || goldGolfers[5] == 4 || goldGolfers[6] == 4) && (goldGolfers[0] == 2 || goldGolfers[1] == 2 || goldGolfers[2] == 2 || goldGolfers[3] == 2 || goldGolfers[4] == 2 || goldGolfers[5] == 2 || goldGolfers[6] == 2)))
                     {
                         determineTeamsToSwap(teamCnt);
 
                         swapGoldForWhiteFoursome(minGoldTeamA, maxGoldTeamA);
                     }
+                    
                     displayTeamHCPcalc(teamCnt);
                     break;
                 default:
@@ -6452,7 +6549,7 @@ namespace BlueTeeApp
 
         private void twoManTeamsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //get all the lines out as an arry
+            //get all the lines out as an array
             string[] lines = richTextBox2.Lines;
             var newlines = lines.Skip(1);
 
@@ -8813,60 +8910,66 @@ namespace BlueTeeApp
                     if (maxGoldTeamA == null)
                         maxGoldTeamA = "team" + (1 + i).ToString() + "= Four";
                     else
-                        maxGoldTeamB = maxGoldTeamA;
+                        maxGoldTeamB = "team" + (1 + i).ToString() + "= Four";
                 }
                 //By checking for null, the 1st Team that has 3 players playing from the Gold Tees is set to maxGoldB
                 else if (goldGolfers[i] == 3)
                 {
-                    if (maxGoldTeamB == null)
+                    if (maxGoldTeamA == null)
+                        maxGoldTeamA = "team" + (1 + i).ToString() + "= Three";
+                    else if (maxGoldTeamB == null)
                         maxGoldTeamB = "team" + (1 + i).ToString() + "= Three";
                     else
-                        maxGoldTeamC = maxGoldTeamB;
+                        maxGoldTeamC = "team" + (1 + i).ToString() + "= Three";
                 }
                 //By checking for null, the 1st Team that has 2 players playing from the Gold Tees is set to maxGoldC
                 else if (goldGolfers[i] == 2)
                 {
-                    if (maxGoldTeamC == null) 
+                    if (maxGoldTeamA == null) 
+                        maxGoldTeamA = "team" + (1 + i).ToString() + "= Two";
+                    else if (maxGoldTeamB == null)
+                        maxGoldTeamB = "team" + (1 + i).ToString() + "= Two";
+                    else
                         maxGoldTeamC = "team" + (1 + i).ToString() + "= Two";
-                }                
+                }
 
                 // MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN MIN 
-                //Find the 1st Team that has 0 player playing from the Gold Tees
-                else if (goldGolfers[i] == 0)
+
+                //Find the 1st Team that has 2 players playing from the Gold Tees
+                else if (goldGolfers[i] == 2)
                 {
                     if (minGoldTeamA == null)
-                        minGoldTeamA = "team" + (1 + i).ToString() + "= Zero";
+                        minGoldTeamA = "team" + (1 + i).ToString() + "= Two";
+                    else if (minGoldTeamB == null)
+                        minGoldTeamB = "team" + (1 + i).ToString() + "= Two";
                     else
-                        minGoldTeamB = minGoldTeamA;
+                        minGoldTeamC = "team" + (1 + i).ToString() + "= Two";
                 }
 
                 //Find the 1st Team that has 1 player playing from the Gold Tees
                 else if (goldGolfers[i] == 1)
                 {
-                    if (minGoldTeamB == null)
+                    if (minGoldTeamA == null)
+                        minGoldTeamA = "team" + (1 + i).ToString() + "= One";
+                    else if (minGoldTeamB == null)
                         minGoldTeamB = "team" + (1 + i).ToString() + "= One";
                     else
-                        minGoldTeamC = minGoldTeamB;
-                }                
-            }
-            // If there isn't a team with 4 Golds pick promote the other teams with 3 or 2
-            if (maxGoldTeamA == null && maxGoldTeamB != null)
-            {
-                maxGoldTeamA = maxGoldTeamB;
-                maxGoldTeamB = maxGoldTeamC;
-            }
-            if (maxGoldTeamA == null && maxGoldTeamB == null && maxGoldTeamC != null)
-            {
-                maxGoldTeamA = maxGoldTeamC;
+                        minGoldTeamC = "team" + (1 + i).ToString() + "= One";
+                }
+                //Find the 1st Team that has 0 player playing from the Gold Tees
+                else if (goldGolfers[i] == 0)
+                {
+                    if (minGoldTeamA == null) 
+                        minGoldTeamA = "team" + (1 + i).ToString() + "= Zero";
+                    else
+                    {
+                        minGoldTeamB = minGoldTeamA;
+                        minGoldTeamA = "team" + (1 + i).ToString() + "= Zero";
+                    }
+                }
+
             }
 
-            // Check if there is a team with zero golds
-            if (minGoldTeamA == null)
-            {
-                // If there isn't a team with zero Golds use a team with just one Gold player
-                minGoldTeamA = minGoldTeamB;
-            }
-            
         }
         
     }

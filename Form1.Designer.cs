@@ -164,14 +164,14 @@ namespace BlueTeeApp
             // 
             this.listBox1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.listBox1.BackColor = System.Drawing.SystemColors.Info;
-            this.listBox1.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listBox1.Font = new System.Drawing.Font("Lucida Console", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 17;
-            this.listBox1.Location = new System.Drawing.Point(65, 82);
+            this.listBox1.ItemHeight = 20;
+            this.listBox1.Location = new System.Drawing.Point(60, 82);
             this.listBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(223, 548);
+            this.listBox1.Size = new System.Drawing.Size(223, 584);
             this.listBox1.TabIndex = 1;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged_1);
             // 
@@ -185,7 +185,7 @@ namespace BlueTeeApp
             this.listBox2.Location = new System.Drawing.Point(525, 82);
             this.listBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(238, 564);
+            this.listBox2.Size = new System.Drawing.Size(238, 584);
             this.listBox2.TabIndex = 2;
             // 
             // label1
@@ -218,7 +218,7 @@ namespace BlueTeeApp
             this.listBox3.Location = new System.Drawing.Point(770, 82);
             this.listBox3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox3.Name = "listBox3";
-            this.listBox3.Size = new System.Drawing.Size(67, 564);
+            this.listBox3.Size = new System.Drawing.Size(67, 584);
             this.listBox3.TabIndex = 5;
             // 
             // label3
@@ -251,7 +251,7 @@ namespace BlueTeeApp
             this.listBox4.Location = new System.Drawing.Point(847, 82);
             this.listBox4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox4.Name = "listBox4";
-            this.listBox4.Size = new System.Drawing.Size(55, 564);
+            this.listBox4.Size = new System.Drawing.Size(55, 584);
             this.listBox4.TabIndex = 7;
             // 
             // label5
@@ -268,14 +268,14 @@ namespace BlueTeeApp
             // 
             this.listBox5.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.listBox5.BackColor = System.Drawing.SystemColors.Info;
-            this.listBox5.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listBox5.Font = new System.Drawing.Font("Lucida Console", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listBox5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBox5.FormattingEnabled = true;
-            this.listBox5.ItemHeight = 17;
-            this.listBox5.Location = new System.Drawing.Point(247, 82);
+            this.listBox5.ItemHeight = 20;
+            this.listBox5.Location = new System.Drawing.Point(267, 82);
             this.listBox5.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox5.Name = "listBox5";
-            this.listBox5.Size = new System.Drawing.Size(68, 548);
+            this.listBox5.Size = new System.Drawing.Size(68, 584);
             this.listBox5.TabIndex = 9;
             // 
             // richTextBox1
@@ -318,7 +318,7 @@ namespace BlueTeeApp
             this.richTextBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.richTextBox2.Size = new System.Drawing.Size(378, 578);
+            this.richTextBox2.Size = new System.Drawing.Size(378, 584);
             this.richTextBox2.TabIndex = 13;
             this.richTextBox2.Text = "";
             // 
@@ -326,7 +326,7 @@ namespace BlueTeeApp
             // 
             this.button1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.button1.Enabled = false;
-            this.button1.Location = new System.Drawing.Point(353, 460);
+            this.button1.Location = new System.Drawing.Point(356, 460);
             this.button1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(107, 84);
@@ -342,17 +342,17 @@ namespace BlueTeeApp
             this.listBox6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBox6.FormattingEnabled = true;
             this.listBox6.ItemHeight = 20;
-            this.listBox6.Location = new System.Drawing.Point(484, 82);
+            this.listBox6.Location = new System.Drawing.Point(487, 82);
             this.listBox6.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox6.Name = "listBox6";
-            this.listBox6.Size = new System.Drawing.Size(36, 564);
+            this.listBox6.Size = new System.Drawing.Size(36, 584);
             this.listBox6.TabIndex = 16;
             // 
             // numericUpDown1
             // 
             this.numericUpDown1.DecimalPlaces = 1;
             this.numericUpDown1.Font = new System.Drawing.Font("Microsoft Sans Serif", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDown1.Location = new System.Drawing.Point(349, 112);
+            this.numericUpDown1.Location = new System.Drawing.Point(352, 112);
             this.numericUpDown1.Minimum = new decimal(new int[] {
             10,
             0,
@@ -373,7 +373,7 @@ namespace BlueTeeApp
             // 
             this.guestLbl.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.guestLbl.AutoSize = true;
-            this.guestLbl.Location = new System.Drawing.Point(351, 46);
+            this.guestLbl.Location = new System.Drawing.Point(354, 46);
             this.guestLbl.Name = "guestLbl";
             this.guestLbl.Size = new System.Drawing.Size(114, 60);
             this.guestLbl.TabIndex = 23;
@@ -385,7 +385,7 @@ namespace BlueTeeApp
             // 
             this.instrLbl.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.instrLbl.AutoSize = true;
-            this.instrLbl.Location = new System.Drawing.Point(345, 152);
+            this.instrLbl.Location = new System.Drawing.Point(348, 152);
             this.instrLbl.Name = "instrLbl";
             this.instrLbl.Size = new System.Drawing.Size(138, 120);
             this.instrLbl.TabIndex = 24;
@@ -396,7 +396,7 @@ namespace BlueTeeApp
             // textBox1
             // 
             this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new System.Drawing.Point(424, 114);
+            this.textBox1.Location = new System.Drawing.Point(427, 114);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(49, 30);
             this.textBox1.TabIndex = 25;
@@ -408,7 +408,7 @@ namespace BlueTeeApp
             this.swLbl.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.swLbl.AutoSize = true;
             this.swLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.swLbl.Location = new System.Drawing.Point(12, 650);
+            this.swLbl.Location = new System.Drawing.Point(1204, 9);
             this.swLbl.Name = "swLbl";
             this.swLbl.Size = new System.Drawing.Size(57, 17);
             this.swLbl.TabIndex = 26;
@@ -418,24 +418,24 @@ namespace BlueTeeApp
             // 
             this.listBox7.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.listBox7.BackColor = System.Drawing.SystemColors.Info;
-            this.listBox7.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.listBox7.Font = new System.Drawing.Font("Lucida Console", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.listBox7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(192)))));
             this.listBox7.FormattingEnabled = true;
-            this.listBox7.ItemHeight = 17;
+            this.listBox7.ItemHeight = 20;
             this.listBox7.Location = new System.Drawing.Point(23, 82);
             this.listBox7.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.listBox7.Name = "listBox7";
-            this.listBox7.Size = new System.Drawing.Size(36, 548);
+            this.listBox7.Size = new System.Drawing.Size(36, 584);
             this.listBox7.TabIndex = 27;
             // 
             // textBox2
             // 
             this.textBox2.BackColor = System.Drawing.SystemColors.Info;
             this.textBox2.Enabled = false;
-            this.textBox2.Location = new System.Drawing.Point(295, 82);
+            this.textBox2.Location = new System.Drawing.Point(317, 82);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(30, 548);
+            this.textBox2.Size = new System.Drawing.Size(30, 577);
             this.textBox2.TabIndex = 28;
             // 
             // richTextBox3

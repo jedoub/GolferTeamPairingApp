@@ -74,6 +74,15 @@ namespace BlueTeeApp
             this.textBox3 = new System.Windows.Forms.TextBox();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.textBox5 = new System.Windows.Forms.TextBox();
+            this.numericUpDown36 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown37 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown38 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown39 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown40 = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.numericUpDown41 = new System.Windows.Forms.NumericUpDown();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).BeginInit();
@@ -109,6 +118,12 @@ namespace BlueTeeApp
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown33)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown34)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown35)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown36)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown37)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown38)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown39)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown40)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown41)).BeginInit();
             this.SuspendLayout();
             // 
             // wolfRTB
@@ -132,6 +147,7 @@ namespace BlueTeeApp
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown1.TabIndex = 1;
+            this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
             // 
             // numericUpDown2
             // 
@@ -205,9 +221,9 @@ namespace BlueTeeApp
             this.label2.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(373, 41);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(97, 28);
+            this.label2.Size = new System.Drawing.Size(114, 28);
             this.label2.TabIndex = 7;
-            this.label2.Text = "SCORE";
+            this.label2.Text = "POINTS";
             // 
             // numericUpDown7
             // 
@@ -606,6 +622,7 @@ namespace BlueTeeApp
             this.numericUpDown31.Name = "numericUpDown31";
             this.numericUpDown31.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown31.TabIndex = 38;
+            this.numericUpDown31.ValueChanged += new System.EventHandler(this.numericUpDown31_ValueChanged);
             // 
             // numericUpDown32
             // 
@@ -620,6 +637,7 @@ namespace BlueTeeApp
             this.numericUpDown32.Name = "numericUpDown32";
             this.numericUpDown32.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown32.TabIndex = 37;
+            this.numericUpDown32.ValueChanged += new System.EventHandler(this.numericUpDown32_ValueChanged);
             // 
             // numericUpDown33
             // 
@@ -634,6 +652,7 @@ namespace BlueTeeApp
             this.numericUpDown33.Name = "numericUpDown33";
             this.numericUpDown33.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown33.TabIndex = 36;
+            this.numericUpDown33.ValueChanged += new System.EventHandler(this.numericUpDown33_ValueChanged);
             // 
             // numericUpDown34
             // 
@@ -648,6 +667,7 @@ namespace BlueTeeApp
             this.numericUpDown34.Name = "numericUpDown34";
             this.numericUpDown34.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown34.TabIndex = 35;
+            this.numericUpDown34.ValueChanged += new System.EventHandler(this.numericUpDown34_ValueChanged);
             // 
             // numericUpDown35
             // 
@@ -662,6 +682,7 @@ namespace BlueTeeApp
             this.numericUpDown35.Name = "numericUpDown35";
             this.numericUpDown35.Size = new System.Drawing.Size(84, 34);
             this.numericUpDown35.TabIndex = 34;
+            this.numericUpDown35.ValueChanged += new System.EventHandler(this.numericUpDown35_ValueChanged);
             // 
             // label3
             // 
@@ -723,11 +744,172 @@ namespace BlueTeeApp
             this.textBox5.Size = new System.Drawing.Size(64, 34);
             this.textBox5.TabIndex = 44;
             // 
+            // numericUpDown36
+            // 
+            this.numericUpDown36.Enabled = false;
+            this.numericUpDown36.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown36.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown36.Location = new System.Drawing.Point(1197, 297);
+            this.numericUpDown36.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown36.Name = "numericUpDown36";
+            this.numericUpDown36.Size = new System.Drawing.Size(82, 34);
+            this.numericUpDown36.TabIndex = 49;
+            // 
+            // numericUpDown37
+            // 
+            this.numericUpDown37.Enabled = false;
+            this.numericUpDown37.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown37.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown37.Location = new System.Drawing.Point(1197, 242);
+            this.numericUpDown37.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown37.Name = "numericUpDown37";
+            this.numericUpDown37.Size = new System.Drawing.Size(82, 34);
+            this.numericUpDown37.TabIndex = 48;
+            // 
+            // numericUpDown38
+            // 
+            this.numericUpDown38.Enabled = false;
+            this.numericUpDown38.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown38.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown38.Location = new System.Drawing.Point(1197, 188);
+            this.numericUpDown38.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown38.Name = "numericUpDown38";
+            this.numericUpDown38.Size = new System.Drawing.Size(82, 34);
+            this.numericUpDown38.TabIndex = 47;
+            // 
+            // numericUpDown39
+            // 
+            this.numericUpDown39.Enabled = false;
+            this.numericUpDown39.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown39.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown39.Location = new System.Drawing.Point(1194, 134);
+            this.numericUpDown39.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown39.Name = "numericUpDown39";
+            this.numericUpDown39.Size = new System.Drawing.Size(85, 34);
+            this.numericUpDown39.TabIndex = 46;
+            // 
+            // numericUpDown40
+            // 
+            this.numericUpDown40.Enabled = false;
+            this.numericUpDown40.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown40.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown40.Location = new System.Drawing.Point(1194, 81);
+            this.numericUpDown40.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown40.Name = "numericUpDown40";
+            this.numericUpDown40.Size = new System.Drawing.Size(85, 34);
+            this.numericUpDown40.TabIndex = 45;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(1199, 41);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(80, 28);
+            this.label4.TabIndex = 50;
+            this.label4.Text = "$AMT";
+            // 
+            // numericUpDown41
+            // 
+            this.numericUpDown41.DecimalPlaces = 2;
+            this.numericUpDown41.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown41.Increment = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown41.Location = new System.Drawing.Point(28, 376);
+            this.numericUpDown41.Minimum = new decimal(new int[] {
+            25,
+            0,
+            0,
+            131072});
+            this.numericUpDown41.Name = "numericUpDown41";
+            this.numericUpDown41.Size = new System.Drawing.Size(106, 34);
+            this.numericUpDown41.TabIndex = 51;
+            this.numericUpDown41.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            131072});
+            this.numericUpDown41.ValueChanged += new System.EventHandler(this.numericUpDown41_ValueChanged);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Lucida Console", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(140, 378);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(199, 28);
+            this.label5.TabIndex = 52;
+            this.label5.Text = "POINT VALUE";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.ForeColor = System.Drawing.SystemColors.MenuHighlight;
+            this.label6.Location = new System.Drawing.Point(16, 444);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(1185, 17);
+            this.label6.TabIndex = 53;
+            this.label6.Text = "NOTE: Due to rounding down the dollar amts paid into the pot the winning player(s" +
+    ") may come up a bit short.";
+            // 
             // Form3
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1233, 481);
+            this.ClientSize = new System.Drawing.Size(1318, 481);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.numericUpDown41);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.numericUpDown36);
+            this.Controls.Add(this.numericUpDown37);
+            this.Controls.Add(this.numericUpDown38);
+            this.Controls.Add(this.numericUpDown39);
+            this.Controls.Add(this.numericUpDown40);
             this.Controls.Add(this.textBox5);
             this.Controls.Add(this.textBox4);
             this.Controls.Add(this.textBox3);
@@ -811,6 +993,12 @@ namespace BlueTeeApp
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown33)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown34)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown35)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown36)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown37)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown38)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown39)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown40)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown41)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -863,5 +1051,14 @@ namespace BlueTeeApp
         private System.Windows.Forms.TextBox textBox3;
         private System.Windows.Forms.TextBox textBox4;
         private System.Windows.Forms.TextBox textBox5;
+        private System.Windows.Forms.NumericUpDown numericUpDown36;
+        private System.Windows.Forms.NumericUpDown numericUpDown37;
+        private System.Windows.Forms.NumericUpDown numericUpDown38;
+        private System.Windows.Forms.NumericUpDown numericUpDown39;
+        private System.Windows.Forms.NumericUpDown numericUpDown40;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.NumericUpDown numericUpDown41;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
     }
 }

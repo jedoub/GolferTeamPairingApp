@@ -21,14 +21,23 @@ namespace BlueTeeApp
         public Form2()
         {
             InitializeComponent();
-
-            //numericUpDown7.Controls[0].Visible = false;
-            //numericUpDown8.Controls[0].Visible = false;
-            //numericUpDown9.Controls[0].Visible = false;
-
         }
         private void Form2_Load(object sender, EventArgs e)
         {
+            /*
+            RichTextBox RTB = twoManRTB;
+
+            int x = 0;
+            foreach (string line in twoManRTB.Lines)
+            {
+                // Delete any previous Team number
+                if (twoManRTB.Lines[x].Contains("_1") || twoManRTB.Lines[x].Contains("_2") || twoManRTB.Lines[x].Contains("_3") ||
+                    twoManRTB.Lines[x].Contains("_4") || twoManRTB.Lines[x].Contains("_5") || twoManRTB.Lines[x].Contains("_6") || twoManRTB.Lines[x].Contains("_7"))
+                    RTB.Lines[x] = twoManRTB.Lines[x].Trim('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_');
+                x++;
+            }
+            twoManRTB = RTB;
+            */
             // create array with the correct size
             //Since the PlayerCnt has already been incremented subtract ONE
             playerCnt = Form1.playerCnt - 1;
@@ -46,8 +55,6 @@ namespace BlueTeeApp
                 //and fill in a bogus front and back 9 score
                 if (Form1.playerCnt == 8)
                 {
-                    //numericUpDown51.Value = 25;
-                    //numericUpDown50.Value = 25;
                     numericUpDown51.Visible = false;
                     numericUpDown50.Visible = false;
                     numericUpDown49.Visible = false;
@@ -59,8 +66,6 @@ namespace BlueTeeApp
                 }
                 else if (Form1.playerCnt == 10)
                 {
-                    //numericUpDown42.Value = 25;
-                    //numericUpDown41.Value = 25;
                     numericUpDown42.Visible = false;
                     numericUpDown41.Visible = false;
                     numericUpDown40.Visible = false;
@@ -72,9 +77,6 @@ namespace BlueTeeApp
                 }
                 else if (Form1.playerCnt == 12)
                 {
-                    //numericUpDown33.Value = 25;
-                    //numericUpDown32.Value = 25;
-
                     numericUpDown33.Visible = false;
                     numericUpDown32.Visible = false;
                     numericUpDown31.Visible = false;
@@ -86,8 +88,6 @@ namespace BlueTeeApp
                 }
                 else if (Form1.playerCnt == 14)
                 {
-                    //numericUpDown60.Value = 25;
-                    //numericUpDown59.Value = 25;
                     numericUpDown60.Visible = false;
                     numericUpDown59.Visible = false;
                     numericUpDown58.Visible = false;
@@ -96,6 +96,16 @@ namespace BlueTeeApp
                     numericUpDown56.Visible = false;
                     numericUpDown55.Visible = false;
                     nameOfLastPlayer = twoManRTB.Lines[31];
+                }
+                else if (Form1.playerCnt == 16)
+                {
+                    numericUpDown64.Visible = true;
+                    numericUpDown65.Visible = true;
+                    numericUpDown66.Visible = true;
+
+                    numericUpDown66.Enabled = true;
+                    numericUpDown65.Enabled = true;
+                    nameOfLastPlayer = twoManRTB.Lines[35];
                 }
             }
             else
@@ -193,6 +203,14 @@ namespace BlueTeeApp
             numericUpDown56.BackColor = Color.White;
             numericUpDown57.ForeColor = Color.Black;
             numericUpDown57.BackColor = Color.White;
+
+            numericUpDown66.ForeColor = Color.Black;
+            numericUpDown66.BackColor = Color.White;
+            numericUpDown65.ForeColor = Color.Black;
+            numericUpDown65.BackColor = Color.White;
+            numericUpDown64.ForeColor = Color.Black;
+            numericUpDown64.BackColor = Color.White;
+            
         }
 
         private void OKbtn_Click(object sender, EventArgs e)
@@ -689,6 +707,29 @@ namespace BlueTeeApp
             teamScoresBack[6] = numericUpDown56.Value;
         }
 
+        private void numericUpDown66_ValueChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                numericUpDown64.Value = numericUpDown66.Value + numericUpDown65.Value;
+            }
+            catch (System.Exception except) { MessageBox.Show(except.Message, "Error"); }
+        }
+
+        private void numericUpDown65_ValueChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                numericUpDown64.Value = numericUpDown66.Value + numericUpDown65.Value;
+            }
+            catch (System.Exception except) { MessageBox.Show(except.Message, "Error"); }
+        }
+
+        private void numericUpDown64_ValueChanged(object sender, EventArgs e)
+        {
+            playerScores[14] = numericUpDown64.Value;
+        }
+
         private void numericUpDown55_ValueChanged(object sender, EventArgs e)
         {
             teamScoresTotal[6] = numericUpDown55.Value;
@@ -818,30 +859,36 @@ namespace BlueTeeApp
         // KICK OUT THE LOW PLAYER
         private void button1_Click(object sender, EventArgs e)
         {           
-            // Kick out the Low Player
+            // Find the Low Score of all the  Players
             Array.Sort(playerScores);
             
+            // Find the High score
             maxScore = playerScores.Max();
 
-            //Highlight the Low individual score
+            // Player 1
             if (numericUpDown3.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
+                // Use these 3 memory locations to temporarily save the LOW SCORER's NAME AND 9-hole TOTALS
                 decimal lowFront = numericUpDown1.Value;
                 decimal lowBack = numericUpDown2.Value;
-                nameOfLowScorer = twoManRTB.Lines[1].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ');
+                nameOfLowScorer = twoManRTB.Lines[1];
 
+                // Check if there are an ODD number of players.
                 if (!(playerCnt % 2 == 0))
                 {
+                    //The UpDn Box that holds the odd man out SCORE changes based on the number of players so check the player count to know which UpDn to manipulate.
                     if (Form1.playerCnt == 8)
                     {
-                        //Move the ODD MAN's Scores into the LowMan's position
+                        //Move the ODD MAN's Scores into the LowMan's position.
                         numericUpDown1.Value = numericUpDown54.Value;
                         numericUpDown2.Value = numericUpDown53.Value;
 
                         //Move the low FRONT AND BACK scores to the TEAM 4 Player FRONT AND BACK numeric UpDn
                         numericUpDown54.Value = lowFront;
                         numericUpDown53.Value = lowBack;
+
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
                         numericUpDown52.ForeColor = Color.White;
                         numericUpDown52.BackColor = Color.Red;
 
@@ -858,6 +905,8 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 5 Player FRONT AND BACK numeric UpDn
                         numericUpDown45.Value = lowFront;
                         numericUpDown44.Value = lowBack;
+
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
                         numericUpDown43.ForeColor = Color.White;
                         numericUpDown43.BackColor = Color.Red;
 
@@ -874,13 +923,14 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 6 Player FRONT AND BACK numeric UpDn
                         numericUpDown36.Value = lowFront;
                         numericUpDown35.Value = lowBack;
+
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
                         numericUpDown34.ForeColor = Color.White;
                         numericUpDown34.BackColor = Color.Red;
 
                         changeLine(twoManRTB, 1, nameOfLastPlayer);
                         changeLine(twoManRTB, 26, nameOfLowScorer);
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown34.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
-
                     }
                     else if (Form1.playerCnt == 14)
                     {
@@ -891,34 +941,59 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 7 Player FRONT AND BACK numeric UpDn
                         numericUpDown63.Value = lowFront;
                         numericUpDown62.Value = lowBack;
+
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
                         numericUpDown61.ForeColor = Color.White;
                         numericUpDown61.BackColor = Color.Red;
 
                         changeLine(twoManRTB, 1, nameOfLastPlayer);
                         changeLine(twoManRTB, 31, nameOfLowScorer);
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown1.Value = numericUpDown66.Value;
+                        numericUpDown2.Value = numericUpDown65.Value;
 
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 1, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
                 }
             }
+            // Player 2
             if (numericUpDown4.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
                 decimal lowFront = numericUpDown6.Value;
                 decimal lowBack = numericUpDown5.Value;
-                nameOfLowScorer = twoManRTB.Lines[2].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ');
+                nameOfLowScorer = twoManRTB.Lines[2];
 
                 if (!(playerCnt % 2 == 0))
                 {
                     if (Form1.playerCnt == 8)
                     {
-                        //Move the ODD MAN's Scores into the LowMan's position
+                        //Move the ODD MAN's Scores into the LowMan's numericUpDown. This position changes based on the number of players.
                         numericUpDown6.Value = numericUpDown54.Value;
                         numericUpDown5.Value = numericUpDown53.Value;
 
-                        //Move the low FRONT AND BACK scores to the TEAM 4 Player FRONT AND BACK numeric UpDn
+                        //Move the low FRONT AND BACK scores to the 1st TEAM 4 Player FRONT AND BACK numeric UpDn
                         numericUpDown54.Value = lowFront;
                         numericUpDown53.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown52.ForeColor = Color.White;
                         numericUpDown52.BackColor = Color.Red;
 
@@ -932,9 +1007,11 @@ namespace BlueTeeApp
                         numericUpDown6.Value = numericUpDown45.Value;
                         numericUpDown5.Value = numericUpDown44.Value;
 
-                        //Move the low FRONT AND BACK scores to the TEAM 5 Player FRONT AND BACK numeric UpDn
+                        //Move the low FRONT AND BACK scores to the 1st TEAM 5 Player FRONT AND BACK numeric UpDn
                         numericUpDown45.Value = lowFront;
                         numericUpDown44.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown43.ForeColor = Color.White;
                         numericUpDown43.BackColor = Color.Red;
 
@@ -948,9 +1025,11 @@ namespace BlueTeeApp
                         numericUpDown6.Value = numericUpDown36.Value;
                         numericUpDown5.Value = numericUpDown35.Value;
 
-                        //Move the low FRONT AND BACK scores to the TEAM 6 Player FRONT AND BACK numeric UpDn
+                        //Move the low FRONT AND BACK scores to the 1st TEAM 6 Player FRONT AND BACK numeric UpDn
                         numericUpDown36.Value = lowFront;
                         numericUpDown35.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown34.ForeColor = Color.White;
                         numericUpDown34.BackColor = Color.Red;
 
@@ -964,9 +1043,11 @@ namespace BlueTeeApp
                         numericUpDown6.Value = numericUpDown63.Value;
                         numericUpDown5.Value = numericUpDown62.Value;
 
-                        //Move the low FRONT AND BACK scores to the TEAM 7 Player FRONT AND BACK numeric UpDn
+                        //Move the low FRONT AND BACK scores to the 1st TEAM 7 Player FRONT AND BACK numeric UpDn
                         numericUpDown63.Value = lowFront;
                         numericUpDown62.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown61.ForeColor = Color.White;
                         numericUpDown61.BackColor = Color.Red;
 
@@ -974,14 +1055,30 @@ namespace BlueTeeApp
                         changeLine(twoManRTB, 31, nameOfLowScorer);
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown6.Value = numericUpDown66.Value;
+                        numericUpDown5.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the 1st TEAM 8 Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 2, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
                 }
-            }/*
-            if (numericUpDown7.Value == playerScores[0])
-            {
-                TEAM 1 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown7.ForeColor = Color.White;
-                numericUpDown7.BackColor = Color.Red;
-            }*/
+            }
+            // Player 3
             if (numericUpDown16.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -991,7 +1088,7 @@ namespace BlueTeeApp
 
                 //Move the ODD MAN's Scores into the LowMan's position
                 //Change this line to be the RTB line that equates with the NumericUpDnXX found in the IF STATEMENT
-                nameOfLowScorer = twoManRTB.Lines[6].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ');
+                nameOfLowScorer = twoManRTB.Lines[6];
 
                 if (!(playerCnt % 2 == 0))
                 {
@@ -1005,6 +1102,8 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 4 Player FRONT AND BACK numeric UpDn
                         numericUpDown54.Value = lowFront;
                         numericUpDown53.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown52.ForeColor = Color.White;
                         numericUpDown52.BackColor = Color.Red;
 
@@ -1025,6 +1124,8 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 5 Player FRONT AND BACK numeric UpDn
                         numericUpDown45.Value = lowFront;
                         numericUpDown44.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown43.ForeColor = Color.White;
                         numericUpDown43.BackColor = Color.Red;
 
@@ -1045,6 +1146,8 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 6 Player FRONT AND BACK numeric UpDn
                         numericUpDown36.Value = lowFront;
                         numericUpDown35.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown34.ForeColor = Color.White;
                         numericUpDown34.BackColor = Color.Red;
 
@@ -1065,6 +1168,8 @@ namespace BlueTeeApp
                         //Move the low FRONT AND BACK scores to the TEAM 7 Player FRONT AND BACK numeric UpDn
                         numericUpDown63.Value = lowFront;
                         numericUpDown62.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
                         numericUpDown61.ForeColor = Color.White;
                         numericUpDown61.BackColor = Color.Red;
 
@@ -1075,8 +1180,30 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown18.Value = numericUpDown66.Value;
+                        numericUpDown17.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        //Highlight the Low individual score of all the players. For this you check each player to see if they had the low score found in the SORT above.
+
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 6, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
                 }
             }
+            // Player 4
             if (numericUpDown13.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1084,7 +1211,7 @@ namespace BlueTeeApp
                 decimal lowFront = numericUpDown15.Value;
                 decimal lowBack = numericUpDown14.Value;
                 //Change this line to be the RTB line that equates with the NumericUpDnXX found in the IF STATEMENT
-                nameOfLowScorer = twoManRTB.Lines[7].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ');
+                nameOfLowScorer = twoManRTB.Lines[7];
 
                 if (!(playerCnt % 2 == 0))
                 {
@@ -1168,14 +1295,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown15.Value = numericUpDown66.Value;
+                        numericUpDown14.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 7, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
-            }/*
-            if (numericUpDown10.Value == playerScores[0])
-            {
-                TEAM 2 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown10.ForeColor = Color.White;
-                numericUpDown10.BackColor = Color.Red;
-            }*/
+            }
+            // Player 5
             if (numericUpDown25.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1268,8 +1410,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown27.Value = numericUpDown66.Value;
+                        numericUpDown26.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 11, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
             }
+            // Player 6
             if (numericUpDown22.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1362,14 +1525,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Current numericUpDn(FRONT) that is on the same line as the NumericUpDn(TOTAL) on the same line (reference the 1st IF STATEMENT)
+                        numericUpDown24.Value = numericUpDown66.Value;
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line (reference the 1st IF STATEMENT)
+                        numericUpDown23.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 12, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }                    
                 }
-            }/*
-            if (numericUpDown19.Value == playerScores[0])
-            {
-                TEAM 3 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown19.ForeColor = Color.White;
-                numericUpDown19.BackColor = Color.Red;
-            }*/
+            }
+            // Player 7
             if (numericUpDown52.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1462,8 +1640,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown54.Value = numericUpDown66.Value;
+                        numericUpDown53.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 16, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
             }
+            // Player 8
             if (numericUpDown49.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1534,14 +1733,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown51.Value = numericUpDown66.Value;
+                        numericUpDown50.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 16, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
-            }/*
-            if (numericUpDown46.Value == playerScores[0])
-            {
-                TEAM 4 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown46.ForeColor = Color.White;
-                numericUpDown46.BackColor = Color.Red;
-            }*/
+            }
+            // Player 9
             if (numericUpDown43.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1613,8 +1827,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown45.Value = numericUpDown66.Value;
+                        numericUpDown44.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 21, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
             }
+            // Player 10
             if (numericUpDown40.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1666,14 +1901,29 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown42.Value = numericUpDown66.Value;
+                        numericUpDown41.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 22, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+
                 }
-            }/*
-            if (numericUpDown37.Value == playerScores[0])
-            {
-                TEAM 5 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown37.ForeColor = Color.White;
-                numericUpDown37.BackColor = Color.Red;
-            }*/
+            }
+            // Player 11
             if (numericUpDown34.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1725,8 +1975,28 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown36.Value = numericUpDown66.Value;
+                        numericUpDown35.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 26, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
                 }
             }
+            // Player 12
             if (numericUpDown31.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
@@ -1758,17 +2028,32 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown33.Value = numericUpDown66.Value;
+                        numericUpDown32.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 27, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
                 }
-            }/*
-            if (numericUpDown28.Value == playerScores[0])
-            {
-                TEAM 6 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown28.ForeColor = Color.White;
-                numericUpDown28.BackColor = Color.Red;
-            }*/
+            }
+            // Player 13
             if (numericUpDown61.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
+
                 //Change these lines to be the NumericUpDn's found on the same line as the one in the IF STATEMENT
                 decimal lowFront = numericUpDown63.Value;
                 decimal lowBack = numericUpDown62.Value;
@@ -1797,19 +2082,71 @@ namespace BlueTeeApp
                         //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
                         MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown61.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
                     }
+                    else if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown63.Value = numericUpDown66.Value;
+                        numericUpDown62.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 31, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
                 }
             }
+            // Player 14
             if (numericUpDown58.Value == playerScores[0] && lowScorerHit == false)
             {
                 lowScorerHit = true;
-                /************ BLID DRAW FOR 12 PLAYERS ********************/
-            }/*
-            if (numericUpDown55.Value == playerScores[0])
+
+                //Temporary memory for the NumericUpDn's found on the same line as the one in the IF STATEMENT
+                decimal lowFront = numericUpDown60.Value;
+                decimal lowBack = numericUpDown59.Value;
+
+                //Change this line to be the RTB line that equates with the NumericUpDnXX found in the IF STATEMENT
+                nameOfLowScorer = twoManRTB.Lines[31].TrimStart('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ');
+
+                if (!(playerCnt % 2 == 0))
+                {
+                    if (Form1.playerCnt == 16)
+                    {
+                        //Move the ODD MAN's Scores into the LowMan's position
+                        numericUpDown60.Value = numericUpDown66.Value;
+                        numericUpDown59.Value = numericUpDown65.Value;
+
+                        //Move the low FRONT AND BACK scores to the ODD Player FRONT AND BACK numeric UpDn
+                        numericUpDown66.Value = lowFront;
+                        numericUpDown65.Value = lowBack;
+                        numericUpDown64.ForeColor = Color.White;
+                        numericUpDown64.BackColor = Color.Red;
+
+                        //Change this line to be the RTB line that equates with the NumericUpDn found in the IF STATEMENT
+                        changeLine(twoManRTB, 32, nameOfLastPlayer);
+                        //Current numericUpDn(BACK) that is on the same line as the NumericUpDn(TOTAL) on the same line found in the 1st IF STATEMENT for TEAM 8
+                        changeLine(twoManRTB, 35, nameOfLowScorer);
+                        //NumericUpDn is the NumericUpDn(TOTAL) of the NumericUpDn found in the IF STATEMENT for TEAM 7
+                        MessageBox.Show(nameOfLowScorer + " with a score of " + numericUpDown64.Value.ToString() + "\nis randomly selected as the low Player", "Information", MessageBoxButtons.OK);
+                    }
+                }
+            }
+            // Player 15
+            if (numericUpDown64.Value == playerScores[0] && lowScorerHit == false)
             {
-                TEAM 7 ^^^^^^^^^^^^^^^^^^^^^
-                numericUpDown55.ForeColor = Color.White;
-                numericUpDown55.BackColor = Color.Red;
-            }*/
+                lowScorerHit = true;
+                /************ BLID DRAW happened to be the low man so no manipulation is needed FOR 14 PLAYERS ********************/
+                numericUpDown64.ForeColor = Color.White;
+                numericUpDown64.BackColor = Color.Red;
+            }
+            
             button2.Visible = true;
             button3.Visible = true;
         }

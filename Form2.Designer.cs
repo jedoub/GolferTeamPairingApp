@@ -102,6 +102,9 @@ namespace BlueTeeApp
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
+            this.numericUpDown64 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown65 = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDown66 = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).BeginInit();
@@ -165,12 +168,15 @@ namespace BlueTeeApp
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown61)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown62)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown63)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown64)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown65)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown66)).BeginInit();
             this.SuspendLayout();
             // 
             // OKbtn
             // 
             this.OKbtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.OKbtn.Location = new System.Drawing.Point(805, 768);
+            this.OKbtn.Location = new System.Drawing.Point(805, 838);
             this.OKbtn.Margin = new System.Windows.Forms.Padding(4);
             this.OKbtn.Name = "OKbtn";
             this.OKbtn.Size = new System.Drawing.Size(140, 28);
@@ -182,7 +188,7 @@ namespace BlueTeeApp
             // cancelbtn
             // 
             this.cancelbtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelbtn.Location = new System.Drawing.Point(1036, 768);
+            this.cancelbtn.Location = new System.Drawing.Point(1036, 838);
             this.cancelbtn.Margin = new System.Windows.Forms.Padding(4);
             this.cancelbtn.Name = "cancelbtn";
             this.cancelbtn.Size = new System.Drawing.Size(140, 28);
@@ -199,7 +205,7 @@ namespace BlueTeeApp
             this.twoManRTB.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.twoManRTB.Name = "twoManRTB";
             this.twoManRTB.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
-            this.twoManRTB.Size = new System.Drawing.Size(321, 787);
+            this.twoManRTB.Size = new System.Drawing.Size(321, 857);
             this.twoManRTB.TabIndex = 71;
             this.twoManRTB.Text = resources.GetString("twoManRTB.Text");
             // 
@@ -865,12 +871,48 @@ namespace BlueTeeApp
             this.button3.Visible = false;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
+            // numericUpDown64
+            // 
+            this.numericUpDown64.Enabled = false;
+            this.numericUpDown64.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown64.Location = new System.Drawing.Point(637, 799);
+            this.numericUpDown64.Name = "numericUpDown64";
+            this.numericUpDown64.Size = new System.Drawing.Size(70, 24);
+            this.numericUpDown64.TabIndex = 144;
+            this.numericUpDown64.Visible = false;
+            this.numericUpDown64.ValueChanged += new System.EventHandler(this.numericUpDown64_ValueChanged);
+            // 
+            // numericUpDown65
+            // 
+            this.numericUpDown65.Enabled = false;
+            this.numericUpDown65.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown65.Location = new System.Drawing.Point(517, 799);
+            this.numericUpDown65.Name = "numericUpDown65";
+            this.numericUpDown65.Size = new System.Drawing.Size(70, 24);
+            this.numericUpDown65.TabIndex = 143;
+            this.numericUpDown65.Visible = false;
+            this.numericUpDown65.ValueChanged += new System.EventHandler(this.numericUpDown65_ValueChanged);
+            // 
+            // numericUpDown66
+            // 
+            this.numericUpDown66.Enabled = false;
+            this.numericUpDown66.Font = new System.Drawing.Font("Lucida Console", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDown66.Location = new System.Drawing.Point(397, 799);
+            this.numericUpDown66.Name = "numericUpDown66";
+            this.numericUpDown66.Size = new System.Drawing.Size(70, 24);
+            this.numericUpDown66.TabIndex = 142;
+            this.numericUpDown66.Visible = false;
+            this.numericUpDown66.ValueChanged += new System.EventHandler(this.numericUpDown66_ValueChanged);
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(1260, 829);
+            this.ClientSize = new System.Drawing.Size(1260, 899);
+            this.Controls.Add(this.numericUpDown64);
+            this.Controls.Add(this.numericUpDown65);
+            this.Controls.Add(this.numericUpDown66);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -1012,6 +1054,9 @@ namespace BlueTeeApp
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown61)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown62)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown63)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown64)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown65)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown66)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1091,5 +1136,8 @@ namespace BlueTeeApp
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.NumericUpDown numericUpDown64;
+        private System.Windows.Forms.NumericUpDown numericUpDown65;
+        private System.Windows.Forms.NumericUpDown numericUpDown66;
     }
 }
